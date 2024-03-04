@@ -5,8 +5,8 @@ import(
 )
 
 type TokenBucket interface {
-    refillTokens()
-    isAllowed(amount uint64) bool
+    refillTokens(now time.Time)
+    isAllowed(amount uint64, now time.Time) bool
 }
 
 type TokenBucket struct {

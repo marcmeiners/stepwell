@@ -19,12 +19,12 @@ func new(capacity uint64, refillRate float64){
 	}
 }
 
-func (bucket *TokenBucketAtomicLoops) refillTokens(){
-	duration := time.Now().Sub(atomic.LoadInt64(bucket.lastRefill))
+func (bucket *TokenBucketAtomicLoops) refillTokens(now time.Time){
+	duration := now.Sub(atomic.LoadInt64(bucket.lastRefill))
 	tokensToAdd := bucket.refillRate * duration.Seconds()
 	
 	if(tokensToAdd > 0){
-		atomic.StoreInt64(&bucket.lastRefill, time.Now())	
+		atomic.StoreInt64(&bucket.lastRefill, now())	
 		for(true) {
 			currentTokens := atomic.LoadInt64(&bucket.tokens)
 			newTokens := currentTokens + tokensToAdd
@@ -38,7 +38,7 @@ func (bucket *TokenBucketAtomicLoops) refillTokens(){
 	}
 }
 
-func (bucket *TokenBucketAtomicLoops) isAllowed(amount uint64) {
+func (bucket *TokenBucketAtomicLoops) isAllowed(amount uint64, now time.Time) {
 	bucket.refillTokens()
 	for {
 		currentTokens := atomic.LoadInt64(&bucket.tokens)

@@ -26,12 +26,12 @@ func new(capacity uint64, refillRate float64){
 	}
 }
 
-func (bucket *TokenBucketLock) refillTokens(){
-	duration := time.Now().Sub(bucket.lastRefill)
+func (bucket *TokenBucketLock) refillTokens(now time.Time){
+	duration := now.Sub(bucket.lastRefill)
 	tokensToAdd := bucket.refillRate * duration.Seconds()
 		
 	if(tokensToAdd > 0){
-		bucket.lastRefill = time.Now()
+		bucket.lastRefill = now
 		newTokens := bucket.tokens + tokensToAdd
 		if newTokens > bucket.capacity {
 			newTokens = bucket.capacity
@@ -40,7 +40,7 @@ func (bucket *TokenBucketLock) refillTokens(){
 	}
 }
 
-func (bucket *TokenBucketLock) isAllowed(amount uint64) {
+func (bucket *TokenBucketLock) isAllowed(amount uint64, now time.Time) {
 	bucket.Lock()
 	//Defer: Hold the lock and immediately release it before returning
 	defer bucket.Unlock()
