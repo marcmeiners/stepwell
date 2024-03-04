@@ -6,12 +6,12 @@ import(
 
 type TokenBucket interface {
     refillTokens()
-    isAllowed() bool
+    isAllowed(amount uint64) bool
 }
 
 type TokenBucket struct {
 	capacity uint64
 	tokens	uint64
-	refillPeriod time.Duration
+	refillRate float64
 	lastRefill time.Time
 }
