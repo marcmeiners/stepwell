@@ -49,4 +49,4 @@ func (bucket *TokenBucketAtomic) isAllowed() {
 	}
 }
 
-
+var _ TokenBucket = (*TokenBucketAtomic)(nil)

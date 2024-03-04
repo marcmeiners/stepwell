@@ -50,4 +50,4 @@ func (bucket *TokenBucketLock) isAllowed() {
 	return false
 }
 
-
+var _ TokenBucket = (*TokenBucketLock)(nil)
