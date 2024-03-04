@@ -1,22 +1,21 @@
 //Tokenbucket with mutex
 //Inspired by similar Java Implemenation https://www.codereliant.io/rate-limiting-deep-dive/
 
+package tokenbucket
+
 import(
 	"time"
 	"sync"
 )
 
-type TokenBucket struct {
+type TokenBucketLock struct {
 	//https://stackoverflow.com/questions/44949467/when-do-you-embed-mutex-in-struct-in-go
 	sync.Mutex
-	capacity uint64
-	tokens	uint64
-	refillPeriod time.Duration
-	lastRefill time.Time
+	TokenBucket
 }
 
 func new(capacity uint64, refillPeriod time.Duration){
-	return &TokenBucket{
+	return &TokenBucketLock{
 		//total capacity of tokens to give out
 		capacity: capacity,
 		//tokens currently available
@@ -26,7 +25,7 @@ func new(capacity uint64, refillPeriod time.Duration){
 	}
 }
 
-func (bucket *TokenBucket) refillTokens(){
+func (bucket *TokenBucketLock) refillTokens(){
 	tokensToAdd := uint64(time.Since(bucket.lastRefill).Milliseconds() / bucket.refillPeriod.Milliseconds())
 	
 	if(tokensToAdd > 0){
@@ -39,7 +38,7 @@ func (bucket *TokenBucket) refillTokens(){
 	}
 }
 
-func (bucket *TokenBucket) isAllowed() {
+func (bucket *TokenBucketLock) isAllowed() {
 	bucket.Lock()
 	//Defer: Hold the lock and immediately release it before returning
 	defer bucket.Unlock()

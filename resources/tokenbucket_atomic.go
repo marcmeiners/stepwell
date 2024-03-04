@@ -3,15 +3,12 @@ import(
 	"sync.atomic"
 )
 
-type TokenBucket struct {
-	capacity uint64
-	tokens	uint64
-	refillPeriod time.Duration
-	lastRefill time.Time
+type TokenBucketAtomic struct {
+	TokenBucket
 }
 
 func new(capacity uint64, refillPeriod time.Duration){
-	return &TokenBucket{
+	return &TokenBucketAtomic{
 		//total capacity of tokens to give out
 		capacity: capacity,
 		//tokens currently available
@@ -21,7 +18,7 @@ func new(capacity uint64, refillPeriod time.Duration){
 	}
 }
 
-func (bucket *TokenBucket) refillTokens(){
+func (bucket *TokenBucketAtomic) refillTokens(){
 	tokensToAdd := uint64(time.Since(atomic.LoadInt64(&bucket.lastRefill)).Milliseconds() / bucket.refillPeriod.Milliseconds())
 	
 	if(tokensToAdd > 0){
@@ -39,7 +36,7 @@ func (bucket *TokenBucket) refillTokens(){
 	}
 }
 
-func (bucket *TokenBucket) isAllowed() {
+func (bucket *TokenBucketAtomic) isAllowed() {
 	bucket.refillTokens()
 	for {
 		currentTokens := atomic.LoadInt64(&bucket.tokens)
