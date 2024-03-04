@@ -7,15 +7,15 @@ type TokenBucketAtomicLoops struct {
 	TokenBucket
 }
 
-func new(capacity uint64, refillRate float64){
-	return &TokenBucketAtomic{
+func new(capacity uint64, refillRate float64, lastRefill time.Time){
+	return &TokenBucketAtomicLoops{
 		//total capacity of tokens to give out
-		capacity: capacity,
+		capacity: capacity
 		//tokens currently available
-		tokens: capacity,
+		tokens: capacity
 		//how many new tokens per second are made available
-		refillRate: refillRate,
-		lastRefill: time.Now()
+		refillRate: refillRate
+		lastRefill: lastRefill
 	}
 }
 
