@@ -7,7 +7,7 @@ type TokenBucketAtomicLoops struct {
 	TokenBucket
 }
 
-func new(capacity uint64, refillRate float64, lastRefill time.Time){
+func newTokenBucketAtomicLoops(capacity uint64, refillRate float64, lastRefill time.Time){
 	return &TokenBucketAtomicLoops{
 		//total capacity of tokens to give out
 		capacity: capacity
@@ -38,7 +38,7 @@ func (bucket *TokenBucketAtomicLoops) refillTokens(now time.Time){
 	}
 }
 
-func (bucket *TokenBucketAtomicLoops) isAllowed(amount uint64, now time.Time) {
+func (bucket *TokenBucketAtomicLoops) isAllowed(amount uint64, now time.Time) bool {
 	bucket.refillTokens()
 	for {
 		currentTokens := atomic.LoadInt64(&bucket.tokens)

@@ -5,14 +5,17 @@ package tokenbucket
 
 import(
 	"time"
+	"sync"
 )
 
-type TokenBucketTrivial struct {
+type TokenBucketLock struct {
+	//https://stackoverflow.com/questions/44949467/when-do-you-embed-mutex-in-struct-in-go
+	sync.Mutex
 	TokenBucket
 }
 
-func new(capacity uint64, refillRate float64, lastRefill time.Time){
-	return &TokenBucketTrivial{
+func newTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Time){
+	return &TokenBucketLock{
 		//total capacity of tokens to give out
 		capacity: capacity
 		//tokens currently available
@@ -23,7 +26,7 @@ func new(capacity uint64, refillRate float64, lastRefill time.Time){
 	}
 }
 
-func (bucket *TokenBucketTrivial) refillTokens(now time.Time){
+func (bucket *TokenBucketLock) refillTokens(now time.Time){
 	duration := now.Sub(bucket.lastRefill)
 	tokensToAdd := bucket.refillRate * duration.Seconds()
 		
@@ -37,7 +40,10 @@ func (bucket *TokenBucketTrivial) refillTokens(now time.Time){
 	}
 }
 
-func (bucket *TokenBucketTrivial) isAllowed(amount uint64, now time.Time) {
+func (bucket *TokenBucketLock) isAllowed(amount uint64, now time.Time) bool {
+	bucket.Lock()
+	//Defer: Hold the lock and immediately release it before returning
+	defer bucket.Unlock()
 	bucket.refillTokens()
 	if(bucket.tokens >= amount){
 		bucket.tokens -= amount
@@ -46,4 +52,4 @@ func (bucket *TokenBucketTrivial) isAllowed(amount uint64, now time.Time) {
 	return false
 }
 
-var _ TokenBucket = (*TokenBucketTrivial)(nil)
+var _ TokenBucket = (*TokenBucketLock)(nil)
