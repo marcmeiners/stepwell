@@ -14,7 +14,7 @@ type TokenBucketLock struct {
 	TokenBucket
 }
 
-func newTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketLock{
+func NewTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketLock{
 	return &TokenBucketLock{
 		TokenBucket: TokenBucket{
 			//total capacity of tokens to give out
@@ -43,7 +43,7 @@ func (bucket *TokenBucketLock) refillTokens(now time.Time){
 	}
 }
 
-func (bucket *TokenBucketLock) isAllowed(amount uint64, now time.Time) bool {
+func (bucket *TokenBucketLock) IsAllowed(amount uint64, now time.Time) bool {
 	bucket.Lock()
 	//Defer: Hold the lock and immediately release it before returning
 	defer bucket.Unlock()

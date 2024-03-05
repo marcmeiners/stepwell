@@ -11,7 +11,7 @@ type TokenBucketTrivial struct {
 	TokenBucket
 }
 
-func newTokenBucketTrivial(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketTrivial{
+func NewTokenBucketTrivial(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketTrivial{
 	return &TokenBucketTrivial{
 		TokenBucket: TokenBucket{
 			//total capacity of tokens to give out
@@ -40,7 +40,7 @@ func (bucket *TokenBucketTrivial) refillTokens(now time.Time){
 	}
 }
 
-func (bucket *TokenBucketTrivial) isAllowed(amount uint64, now time.Time) bool {
+func (bucket *TokenBucketTrivial) IsAllowed(amount uint64, now time.Time) bool {
 	bucket.refillTokens(now)
 	if(bucket.tokens >= amount){
 		bucket.tokens -= amount

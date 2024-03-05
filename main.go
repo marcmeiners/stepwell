@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-    tb := tokenbucket.newTokenBucketLock(10, 1, time.Now())
+    tb := tokenbucket.NewTokenBucketLock(10, 1, time.Now())
 
     now := time.Now()
     requestTimes := []time.Duration{0, time.Second, 2 * time.Second, 3 * time.Second, 5 * time.Second}
