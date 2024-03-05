@@ -1,37 +1,42 @@
+package tokenbucket
+
 import(
 	"time"
-	"sync.atomic"
+	"sync/atomic"
 )
 
 type TokenBucketAtomicLoops struct {
 	TokenBucket
 }
 
-func newTokenBucketAtomicLoops(capacity uint64, refillRate float64, lastRefill time.Time){
+func newTokenBucketAtomicLoops(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketAtomicLoops{
 	return &TokenBucketAtomicLoops{
-		//total capacity of tokens to give out
-		capacity: capacity
-		//tokens currently available
-		tokens: capacity
-		//how many new tokens per second are made available
-		refillRate: refillRate
-		lastRefill: lastRefill
+		TokenBucket: TokenBucket{
+			//total capacity of tokens to give out
+			capacity: capacity,
+			//tokens currently available
+			tokens: capacity,
+			//how many new tokens per second are made available
+			refillRate: refillRate,
+			lastRefill: lastRefill.Unix(), 
+		},
 	}
 }
 
 func (bucket *TokenBucketAtomicLoops) refillTokens(now time.Time){
-	duration := now.Sub(atomic.LoadInt64(bucket.lastRefill))
-	tokensToAdd := bucket.refillRate * duration.Seconds()
+	lastRefillUnix := atomic.LoadInt64(&bucket.lastRefill)
+    duration := now.Unix() - lastRefillUnix
+    tokensToAdd := uint64(bucket.refillRate * float64(duration))
 	
 	if(tokensToAdd > 0){
-		atomic.StoreInt64(&bucket.lastRefill, now())	
+		atomic.StoreInt64(&bucket.lastRefill, now.Unix())	
 		for(true) {
-			currentTokens := atomic.LoadInt64(&bucket.tokens)
+			currentTokens := atomic.LoadUint64(&bucket.tokens)
 			newTokens := currentTokens + tokensToAdd
 			if newTokens > bucket.capacity {
 				newTokens = bucket.capacity
 			}
-			if atomic.CompareAndSwapInt64(&bucket.tokens, currentTokens, newTokens) {
+			if atomic.CompareAndSwapUint64(&bucket.tokens, currentTokens, newTokens) {
 				break
 			}
 		}
@@ -39,16 +44,16 @@ func (bucket *TokenBucketAtomicLoops) refillTokens(now time.Time){
 }
 
 func (bucket *TokenBucketAtomicLoops) isAllowed(amount uint64, now time.Time) bool {
-	bucket.refillTokens()
+	bucket.refillTokens(now)
 	for {
-		currentTokens := atomic.LoadInt64(&bucket.tokens)
+		currentTokens := atomic.LoadUint64(&bucket.tokens)
 		if currentTokens < amount {
 			return false
 		}
-		if atomic.CompareAndSwapInt64(&bucket.tokens, currentTokens, currentTokens-amount) {
+		if atomic.CompareAndSwapUint64(&bucket.tokens, currentTokens, currentTokens-amount) {
 			return true
 		}
 	}
 }
 
-var _ TokenBucket = (*TokenBucketAtomicLoops)(nil)
+var _ TokenBucketInterface = (*TokenBucketAtomicLoops)(nil)

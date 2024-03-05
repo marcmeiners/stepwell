@@ -14,24 +14,27 @@ type TokenBucketLock struct {
 	TokenBucket
 }
 
-func newTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Time){
+func newTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketLock{
 	return &TokenBucketLock{
-		//total capacity of tokens to give out
-		capacity: capacity
-		//tokens currently available
-		tokens: capacity
-		//how many new tokens per second are made available
-		refillRate: refillRate
-		lastRefill: lastRefill
+		TokenBucket: TokenBucket{
+			//total capacity of tokens to give out
+			capacity: capacity,
+			//tokens currently available
+			tokens: capacity,
+			//how many new tokens per second are made available
+			refillRate: refillRate,
+			lastRefill: lastRefill.Unix(),
+		},
 	}
 }
 
 func (bucket *TokenBucketLock) refillTokens(now time.Time){
-	duration := now.Sub(bucket.lastRefill)
-	tokensToAdd := bucket.refillRate * duration.Seconds()
+	nowUnix := now.Unix()
+    duration := nowUnix - bucket.lastRefill
+    tokensToAdd := uint64(bucket.refillRate * float64(duration))
 		
 	if(tokensToAdd > 0){
-		bucket.lastRefill = now
+		bucket.lastRefill = now.Unix()
 		newTokens := bucket.tokens + tokensToAdd
 		if newTokens > bucket.capacity {
 			newTokens = bucket.capacity
@@ -44,7 +47,7 @@ func (bucket *TokenBucketLock) isAllowed(amount uint64, now time.Time) bool {
 	bucket.Lock()
 	//Defer: Hold the lock and immediately release it before returning
 	defer bucket.Unlock()
-	bucket.refillTokens()
+	bucket.refillTokens(now)
 	if(bucket.tokens >= amount){
 		bucket.tokens -= amount
 		return true
@@ -52,4 +55,4 @@ func (bucket *TokenBucketLock) isAllowed(amount uint64, now time.Time) bool {
 	return false
 }
 
-var _ TokenBucket = (*TokenBucketLock)(nil)
+var _ TokenBucketInterface = (*TokenBucketLock)(nil)

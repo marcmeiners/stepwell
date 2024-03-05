@@ -11,24 +11,27 @@ type TokenBucketTrivial struct {
 	TokenBucket
 }
 
-func newTokenBucketTrivial(capacity uint64, refillRate float64, lastRefill time.Time){
+func newTokenBucketTrivial(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketTrivial{
 	return &TokenBucketTrivial{
-		//total capacity of tokens to give out
-		capacity: capacity
-		//tokens currently available
-		tokens: capacity
-		//how many new tokens per second are made available
-		refillRate: refillRate
-		lastRefill: lastRefill
+		TokenBucket: TokenBucket{
+			//total capacity of tokens to give out
+			capacity: capacity,
+			//tokens currently available
+			tokens: capacity,
+			//how many new tokens per second are made available
+			refillRate: refillRate,
+			lastRefill: lastRefill.Unix(),
+		},
 	}
 }
 
 func (bucket *TokenBucketTrivial) refillTokens(now time.Time){
-	duration := now.Sub(bucket.lastRefill)
-	tokensToAdd := bucket.refillRate * duration.Seconds()
+	nowUnix := now.Unix()
+    duration := nowUnix - bucket.lastRefill
+    tokensToAdd := uint64(bucket.refillRate * float64(duration))
 		
 	if(tokensToAdd > 0){
-		bucket.lastRefill = now
+		bucket.lastRefill = now.Unix()
 		newTokens := bucket.tokens + tokensToAdd
 		if newTokens > bucket.capacity {
 			newTokens = bucket.capacity
@@ -38,7 +41,7 @@ func (bucket *TokenBucketTrivial) refillTokens(now time.Time){
 }
 
 func (bucket *TokenBucketTrivial) isAllowed(amount uint64, now time.Time) bool {
-	bucket.refillTokens()
+	bucket.refillTokens(now)
 	if(bucket.tokens >= amount){
 		bucket.tokens -= amount
 		return true
@@ -46,4 +49,4 @@ func (bucket *TokenBucketTrivial) isAllowed(amount uint64, now time.Time) bool {
 	return false
 }
 
-var _ TokenBucket = (*TokenBucketTrivial)(nil)
+var _ TokenBucketInterface = (*TokenBucketTrivial)(nil)
