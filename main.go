@@ -36,27 +36,34 @@ func testStepWell() {
 	}
 }
 
-func testStepWellOverflow() {
-	// Initialize StepWell with a small capacity and refill rate
-	// to ensure it will overflow with a burst of requests.
-	numCores := uint64(8)
-	capacity := uint64(5)
-	refillRate := float64(1)
-	bucketType := 1
-	stepwell := core.NewStepwell(numCores, time.Now(), bucketType, capacity, refillRate)
-
+// handleCoreRequests processes requests for a given core
+func handleCoreRequests(stepwell *core.StepWell, coreID uint64) {
 	now := time.Now()
-	// Simulate a burst of requests in quick succession
 	requestTimes := []time.Duration{0, 100 * time.Millisecond, 200 * time.Millisecond, 300 * time.Millisecond, 400 * time.Millisecond}
 
 	for _, duration := range requestTimes {
 		requestTime := now.Add(duration)
-		// Simulate multiple requests at each time
-		allowed := stepwell.IsAllowed(0, 1, requestTime)
-		fmt.Printf("Request at %s for core %d allowed: %v\n", requestTime.Format(time.RFC3339), 0, allowed)
-		allowed = stepwell.IsAllowed(1, 1, requestTime)
-		fmt.Printf("Request at %s for core %d allowed: %v\n", requestTime.Format(time.RFC3339), 1, allowed)
-		allowed = stepwell.IsAllowed(7, 1, requestTime)
-		fmt.Printf("Request at %s for core %d allowed: %v\n", requestTime.Format(time.RFC3339), 7, allowed)
+		allowed := stepwell.IsAllowed(coreID, 1, requestTime)
+		fmt.Printf("Request at %s for core %d allowed: %v\n", requestTime.Format(time.RFC3339), coreID, allowed)
+		// Simulate processing time or delay between requests for this core
+		time.Sleep(time.Millisecond * 100)
 	}
+}
+
+func testStepWellOverflow() {
+	numCores := uint64(8)
+	capacity := uint64(3)
+	refillRate := float64(2)
+	bucketType := 1
+
+	stepwell := core.NewStepwell(numCores, time.Now(), bucketType, capacity, refillRate)
+
+	// Launch separate goroutines for core 0 and core 7 using the defined functions
+	go handleCoreRequests(stepwell, 0) // Core 0
+	go handleCoreRequests(stepwell, 2) // Core 2
+	go handleCoreRequests(stepwell, 4) // Core 4
+	go handleCoreRequests(stepwell, 7) // Core 7
+
+	// Wait enough time for both goroutines to complete their work
+	time.Sleep(2 * time.Second)
 }
