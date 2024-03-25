@@ -7,20 +7,18 @@ import (
 
 //Problems to think about:
 
-//1. What about the case when a tokenBucket on the path returns false when calling IsAllowed()?
-//   Should the tokens issued before be revoked again?
-
-// "Ports" are the top layer token buckets of the stepwell construct
+//  1. What about the case when a tokenBucket on the path returns false when calling IsAllowed()?
+//     Should the tokens issued before be revoked again?
 type StepWellInterface interface {
 	//Get a token for all the buckets on the path to the single bucket which is the root of the tree and the bottom layer of the StepWell tree structure
 	IsAllowed(port uint64, amount uint64, now time.Time) bool
 }
 
 type StepWell struct {
-	//Ports are the top layer token buckets or the leaves in the StepWell tree structure
-	ports      []*StepWellNode
+	//Cores are the top layer token buckets or the leaves in the StepWell tree structure
+	cores      []*StepWellNode
 	root       *StepWellNode
-	numPorts   uint64
+	numCores   uint64
 	capacity   uint64
 	refillRate float64
 	bucketType int
@@ -36,8 +34,8 @@ type StepWellNode struct {
 	rightChild  *StepWellNode
 }
 
-func NewStepwell(numPorts uint64, now time.Time, bucketType int, capacity uint64, refillRate float64) *StepWell {
-	if numPorts <= 0 {
+func NewStepwell(numCores uint64, now time.Time, bucketType int, capacity uint64, refillRate float64) *StepWell {
+	if numCores <= 0 {
 		return nil
 	}
 
@@ -48,7 +46,7 @@ func NewStepwell(numPorts uint64, now time.Time, bucketType int, capacity uint64
 	var currentLeaves uint64 = 1
 	var addedLeaves uint64 = 0
 
-	for currentLeaves < numPorts {
+	for currentLeaves < numCores {
 		var nextLevel []*StepWellNode
 		// First pass: Add a left child to each node in the current level
 		for _, node := range currentLevel {
@@ -58,9 +56,9 @@ func NewStepwell(numPorts uint64, now time.Time, bucketType int, capacity uint64
 		}
 		addedLeaves = currentLeaves
 
-		// Second pass: Add a right child to nodes in the current level until reaching numPorts
+		// Second pass: Add a right child to nodes in the current level until reaching numCores
 		for _, node := range currentLevel {
-			if addedLeaves < numPorts {
+			if addedLeaves < numCores {
 				rightChild := &StepWellNode{tokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now), parent: node}
 				node.rightChild = rightChild
 				//After a loop iteration the nextLevel array first contains all "left" children and and the all "right" children.
@@ -77,9 +75,9 @@ func NewStepwell(numPorts uint64, now time.Time, bucketType int, capacity uint64
 	}
 
 	return &StepWell{
-		ports:      currentLevel,
+		cores:      currentLevel,
 		root:       root,
-		numPorts:   numPorts,
+		numCores:   numCores,
 		capacity:   capacity,
 		refillRate: refillRate,
 		bucketType: bucketType,
@@ -87,7 +85,7 @@ func NewStepwell(numPorts uint64, now time.Time, bucketType int, capacity uint64
 }
 
 func (stepwell *StepWell) IsAllowed(port uint64, amount uint64, now time.Time) bool {
-	var curr *StepWellNode = stepwell.ports[port]
+	var curr *StepWellNode = stepwell.cores[port]
 
 	if !curr.tokenBucket.IsAllowed(amount, now) {
 		return false

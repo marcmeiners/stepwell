@@ -30,7 +30,7 @@ func (bucket *TokenBucketAtomicLoops) refillTokens(now time.Time) {
 
 	if tokensToAdd > 0 {
 		atomic.StoreInt64(&bucket.lastRefill, now.Unix())
-		for true {
+		for {
 			currentTokens := atomic.LoadUint64(&bucket.tokens)
 			newTokens := currentTokens + tokensToAdd
 			if newTokens > bucket.capacity {

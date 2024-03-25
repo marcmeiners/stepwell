@@ -9,6 +9,7 @@ import (
 
 func main() {
 	testStepWell()
+	testTokenBucket()
 }
 
 func testTokenBucket() {
