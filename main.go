@@ -8,13 +8,13 @@ import (
 )
 
 func main() {
-	testStepWellOverflow()
+	testTokenBucketHelia()
 }
 
-func testTokenBucket() {
-	tb := tokenbucket.NewTokenBucketLock(10, 1, time.Now())
-
+func testTokenBucketHelia() {
 	now := time.Now()
+	tb := tokenbucket.NewTokenBucketHelia(1, 0.5, now)
+
 	requestTimes := []time.Duration{0, time.Second, 2 * time.Second, 3 * time.Second, 5 * time.Second}
 
 	for _, duration := range requestTimes {
