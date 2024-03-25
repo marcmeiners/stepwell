@@ -9,22 +9,24 @@ import (
 )
 
 type TokenBucketLock struct {
+	capacity   uint64
+	tokens     uint64
+	refillRate float64
+	// Store as Unix timestamp to be able to use atomic operations
+	lastRefill int64
 	//https://stackoverflow.com/questions/44949467/when-do-you-embed-mutex-in-struct-in-go
 	sync.Mutex
-	TokenBucket
 }
 
 func NewTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketLock {
 	return &TokenBucketLock{
-		TokenBucket: TokenBucket{
-			//total capacity of tokens to give out
-			capacity: capacity,
-			//tokens currently available
-			tokens: capacity,
-			//how many new tokens per second are made available
-			refillRate: refillRate,
-			lastRefill: lastRefill.Unix(),
-		},
+		//total capacity of tokens to give out
+		capacity: capacity,
+		//tokens currently available
+		tokens: capacity,
+		//how many new tokens per second are made available
+		refillRate: refillRate,
+		lastRefill: lastRefill.Unix(),
 	}
 }
 

@@ -6,20 +6,22 @@ import (
 )
 
 type TokenBucketAtomicLoops struct {
-	TokenBucket
+	capacity   uint64
+	tokens     uint64
+	refillRate float64
+	// Store as Unix timestamp to be able to use atomic operations
+	lastRefill int64
 }
 
 func NewTokenBucketAtomicLoops(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketAtomicLoops {
 	return &TokenBucketAtomicLoops{
-		TokenBucket: TokenBucket{
-			//total capacity of tokens to give out
-			capacity: capacity,
-			//tokens currently available
-			tokens: capacity,
-			//how many new tokens per second are made available
-			refillRate: refillRate,
-			lastRefill: lastRefill.Unix(),
-		},
+		//total capacity of tokens to give out
+		capacity: capacity,
+		//tokens currently available
+		tokens: capacity,
+		//how many new tokens per second are made available
+		refillRate: refillRate,
+		lastRefill: lastRefill.Unix(),
 	}
 }
 

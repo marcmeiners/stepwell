@@ -9,14 +9,6 @@ type TokenBucketInterface interface {
 	IsAllowed(amount uint64, now time.Time) bool
 }
 
-type TokenBucket struct {
-	capacity   uint64
-	tokens     uint64
-	refillRate float64
-	// Store as Unix timestamp to be able to use atomic operations
-	lastRefill int64
-}
-
 func NewTokenBucketByType(bucketType int, capacity uint64, refillRate float64, lastRefill time.Time) TokenBucketInterface {
 	switch bucketType {
 	case 1:
