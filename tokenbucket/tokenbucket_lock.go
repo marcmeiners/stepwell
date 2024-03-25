@@ -3,9 +3,9 @@
 
 package tokenbucket
 
-import(
-	"time"
+import (
 	"sync"
+	"time"
 )
 
 type TokenBucketLock struct {
@@ -14,7 +14,7 @@ type TokenBucketLock struct {
 	TokenBucket
 }
 
-func NewTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketLock{
+func NewTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketLock {
 	return &TokenBucketLock{
 		TokenBucket: TokenBucket{
 			//total capacity of tokens to give out
@@ -28,12 +28,12 @@ func NewTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Tim
 	}
 }
 
-func (bucket *TokenBucketLock) refillTokens(now time.Time){
+func (bucket *TokenBucketLock) refillTokens(now time.Time) {
 	nowUnix := now.Unix()
-    duration := nowUnix - bucket.lastRefill
-    tokensToAdd := uint64(bucket.refillRate * float64(duration))
-		
-	if(tokensToAdd > 0){
+	duration := nowUnix - bucket.lastRefill
+	tokensToAdd := uint64(bucket.refillRate * float64(duration))
+
+	if tokensToAdd > 0 {
 		bucket.lastRefill = now.Unix()
 		newTokens := bucket.tokens + tokensToAdd
 		if newTokens > bucket.capacity {
@@ -48,7 +48,7 @@ func (bucket *TokenBucketLock) IsAllowed(amount uint64, now time.Time) bool {
 	//Defer: Hold the lock and immediately release it before returning
 	defer bucket.Unlock()
 	bucket.refillTokens(now)
-	if(bucket.tokens >= amount){
+	if bucket.tokens >= amount {
 		bucket.tokens -= amount
 		return true
 	}

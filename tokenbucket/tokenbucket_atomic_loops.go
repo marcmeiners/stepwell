@@ -1,15 +1,15 @@
 package tokenbucket
 
-import(
-	"time"
+import (
 	"sync/atomic"
+	"time"
 )
 
 type TokenBucketAtomicLoops struct {
 	TokenBucket
 }
 
-func NewTokenBucketAtomicLoops(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketAtomicLoops{
+func NewTokenBucketAtomicLoops(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketAtomicLoops {
 	return &TokenBucketAtomicLoops{
 		TokenBucket: TokenBucket{
 			//total capacity of tokens to give out
@@ -18,19 +18,19 @@ func NewTokenBucketAtomicLoops(capacity uint64, refillRate float64, lastRefill t
 			tokens: capacity,
 			//how many new tokens per second are made available
 			refillRate: refillRate,
-			lastRefill: lastRefill.Unix(), 
+			lastRefill: lastRefill.Unix(),
 		},
 	}
 }
 
-func (bucket *TokenBucketAtomicLoops) refillTokens(now time.Time){
+func (bucket *TokenBucketAtomicLoops) refillTokens(now time.Time) {
 	lastRefillUnix := atomic.LoadInt64(&bucket.lastRefill)
-    duration := now.Unix() - lastRefillUnix
-    tokensToAdd := uint64(bucket.refillRate * float64(duration))
-	
-	if(tokensToAdd > 0){
-		atomic.StoreInt64(&bucket.lastRefill, now.Unix())	
-		for(true) {
+	duration := now.Unix() - lastRefillUnix
+	tokensToAdd := uint64(bucket.refillRate * float64(duration))
+
+	if tokensToAdd > 0 {
+		atomic.StoreInt64(&bucket.lastRefill, now.Unix())
+		for true {
 			currentTokens := atomic.LoadUint64(&bucket.tokens)
 			newTokens := currentTokens + tokensToAdd
 			if newTokens > bucket.capacity {

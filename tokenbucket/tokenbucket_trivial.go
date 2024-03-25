@@ -3,7 +3,7 @@
 
 package tokenbucket
 
-import(
+import (
 	"time"
 )
 
@@ -11,7 +11,7 @@ type TokenBucketTrivial struct {
 	TokenBucket
 }
 
-func NewTokenBucketTrivial(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketTrivial{
+func NewTokenBucketTrivial(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketTrivial {
 	return &TokenBucketTrivial{
 		TokenBucket: TokenBucket{
 			//total capacity of tokens to give out
@@ -25,12 +25,12 @@ func NewTokenBucketTrivial(capacity uint64, refillRate float64, lastRefill time.
 	}
 }
 
-func (bucket *TokenBucketTrivial) refillTokens(now time.Time){
+func (bucket *TokenBucketTrivial) refillTokens(now time.Time) {
 	nowUnix := now.Unix()
-    duration := nowUnix - bucket.lastRefill
-    tokensToAdd := uint64(bucket.refillRate * float64(duration))
-		
-	if(tokensToAdd > 0){
+	duration := nowUnix - bucket.lastRefill
+	tokensToAdd := uint64(bucket.refillRate * float64(duration))
+
+	if tokensToAdd > 0 {
 		bucket.lastRefill = now.Unix()
 		newTokens := bucket.tokens + tokensToAdd
 		if newTokens > bucket.capacity {
@@ -42,7 +42,7 @@ func (bucket *TokenBucketTrivial) refillTokens(now time.Time){
 
 func (bucket *TokenBucketTrivial) IsAllowed(amount uint64, now time.Time) bool {
 	bucket.refillTokens(now)
-	if(bucket.tokens >= amount){
+	if bucket.tokens >= amount {
 		bucket.tokens -= amount
 		return true
 	}
