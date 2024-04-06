@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"stepwell/core"
+	"stepwell/stepwell"
 	"stepwell/tokenbucket"
 	"time"
 )
@@ -25,7 +25,7 @@ func testTokenBucketHelia() {
 }
 
 func testStepWell() {
-	stepwell := core.NewStepwell(8, time.Now(), 1, 10, 5)
+	stepwell := stepwell.NewStepwell(8, time.Now(), 1, 10, 5)
 	now := time.Now()
 	requestTimes := []time.Duration{0, time.Second, 2 * time.Second, 3 * time.Second, 5 * time.Second}
 
@@ -37,7 +37,7 @@ func testStepWell() {
 }
 
 // handleCoreRequests processes requests for a given core
-func handleCoreRequests(stepwell *core.StepWell, coreID uint64) {
+func handleCoreRequests(stepwell *stepwell.StepWell, coreID uint64) {
 	now := time.Now()
 	requestTimes := []time.Duration{0, 100 * time.Millisecond, 200 * time.Millisecond, 300 * time.Millisecond, 400 * time.Millisecond}
 
@@ -56,7 +56,7 @@ func testStepWellOverflow() {
 	refillRate := float64(2)
 	bucketType := 1
 
-	stepwell := core.NewStepwell(numCores, time.Now(), bucketType, capacity, refillRate)
+	stepwell := stepwell.NewStepwell(numCores, time.Now(), bucketType, capacity, refillRate)
 
 	// Launch separate goroutines for core 0 and core 7 using the defined functions
 	go handleCoreRequests(stepwell, 0) // Core 0
