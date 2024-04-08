@@ -16,10 +16,10 @@ type StepWellInterface interface {
 
 type StepWell struct {
 	//Cores are the top layer token buckets or the leaves in the StepWell tree structure
-	cores      []*StepWellNode
+	Cores      []*StepWellNode
 	root       *StepWellNode
 	numCores   uint64
-	capacity   uint64
+	Capacity   uint64
 	refillRate float64
 	bucketType int
 }
@@ -28,8 +28,8 @@ type StepWell struct {
 // later on we use the tree flipped aroung, i.e. we start at the leaves and iteratively use "prev"
 // also: we make it possible to use different tokenbucket types in the stepwell tree structure
 type StepWellNode struct {
-	tokenBucket tokenbucket.TokenBucketInterface
-	parent      *StepWellNode
+	TokenBucket tokenbucket.TokenBucketInterface
+	Parent      *StepWellNode
 	leftChild   *StepWellNode
 	rightChild  *StepWellNode
 }
@@ -40,7 +40,7 @@ func NewStepwell(numCores uint64, now time.Time, bucketType int, capacity uint64
 	}
 
 	var currentLevel []*StepWellNode
-	root := &StepWellNode{tokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now)}
+	root := &StepWellNode{TokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now)}
 	currentLevel = append(currentLevel, root)
 
 	var currentLeaves uint64 = 1
@@ -50,7 +50,7 @@ func NewStepwell(numCores uint64, now time.Time, bucketType int, capacity uint64
 		var nextLevel []*StepWellNode
 		// First pass: Add a left child to each node in the current level
 		for _, node := range currentLevel {
-			leftChild := &StepWellNode{tokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now), parent: node}
+			leftChild := &StepWellNode{TokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now), Parent: node}
 			node.leftChild = leftChild
 			nextLevel = append(nextLevel, leftChild)
 		}
@@ -59,7 +59,7 @@ func NewStepwell(numCores uint64, now time.Time, bucketType int, capacity uint64
 		// Second pass: Add a right child to nodes in the current level until reaching numCores
 		for _, node := range currentLevel {
 			if addedLeaves < numCores {
-				rightChild := &StepWellNode{tokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now), parent: node}
+				rightChild := &StepWellNode{TokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now), Parent: node}
 				node.rightChild = rightChild
 				//After a loop iteration the nextLevel array first contains all "left" children and and the all "right" children.
 				//In the next iteration, if it is the last one, there might be nodes with two children and nodes with only one child.
@@ -75,25 +75,25 @@ func NewStepwell(numCores uint64, now time.Time, bucketType int, capacity uint64
 	}
 
 	return &StepWell{
-		cores:      currentLevel,
+		Cores:      currentLevel,
 		root:       root,
 		numCores:   numCores,
-		capacity:   capacity,
+		Capacity:   capacity,
 		refillRate: refillRate,
 		bucketType: bucketType,
 	}
 }
 
 func (stepwell *StepWell) IsAllowed(port uint64, amount uint64, now time.Time) bool {
-	var curr *StepWellNode = stepwell.cores[port]
+	var curr *StepWellNode = stepwell.Cores[port]
 
-	if !curr.tokenBucket.IsAllowed(amount, now) {
+	if !curr.TokenBucket.IsAllowed(amount, now) {
 		return false
 	}
 
-	for curr.parent != nil {
-		curr = curr.parent
-		if !curr.tokenBucket.IsAllowed(amount, now) {
+	for curr.Parent != nil {
+		curr = curr.Parent
+		if !curr.TokenBucket.IsAllowed(amount, now) {
 			return false
 		}
 	}

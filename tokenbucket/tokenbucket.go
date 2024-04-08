@@ -6,6 +6,8 @@ import (
 
 type TokenBucketInterface interface {
 	IsAllowed(amount uint64, now time.Time) bool
+	GetCapacity() uint64
+	GetTokens() uint64
 }
 
 func NewTokenBucketByType(bucketType int, capacity uint64, refillRate float64, now time.Time) TokenBucketInterface {

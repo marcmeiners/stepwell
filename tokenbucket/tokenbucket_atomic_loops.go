@@ -45,6 +45,14 @@ func (bucket *TokenBucketAtomicLoops) refillTokens(now time.Time) {
 	}
 }
 
+func (bucket *TokenBucketAtomicLoops) GetCapacity() uint64 {
+	return bucket.capacity
+}
+
+func (bucket *TokenBucketAtomicLoops) GetTokens() uint64 {
+	return bucket.tokens
+}
+
 func (bucket *TokenBucketAtomicLoops) IsAllowed(amount uint64, now time.Time) bool {
 	bucket.refillTokens(now)
 	for {

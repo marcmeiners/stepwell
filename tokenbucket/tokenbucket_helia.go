@@ -21,6 +21,21 @@ func NewTokenBucketHelia(capacity uint64, refillRate float64, timestamp time.Tim
 	}
 }
 
+func (bucket *TokenBucketHelia) GetCapacity() uint64 {
+	return bucket.capacity
+}
+
+func (bucket *TokenBucketHelia) GetTokens() uint64 {
+	now := time.Now()
+	if now.After(bucket.timestamp) {
+		return 0
+	} else {
+		duration := bucket.timestamp.Sub(now)
+		durationInSeconds := float64(duration) / float64(time.Second)
+		return uint64(durationInSeconds / (bucket.refillRateInverse))
+	}
+}
+
 func (bucket *TokenBucketHelia) IsAllowed(amount uint64, now time.Time) bool {
 	T := time.Duration(float64(bucket.capacity) * bucket.refillRateInverse * float64(time.Second))
 	packetTime := time.Duration(float64(amount) * bucket.refillRateInverse * float64(time.Second))

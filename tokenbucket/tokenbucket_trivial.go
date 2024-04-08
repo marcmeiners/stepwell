@@ -42,6 +42,14 @@ func (bucket *TokenBucketTrivial) refillTokens(now time.Time) {
 	}
 }
 
+func (bucket *TokenBucketTrivial) GetCapacity() uint64 {
+	return bucket.capacity
+}
+
+func (bucket *TokenBucketTrivial) GetTokens() uint64 {
+	return bucket.tokens
+}
+
 func (bucket *TokenBucketTrivial) IsAllowed(amount uint64, now time.Time) bool {
 	bucket.refillTokens(now)
 	if bucket.tokens >= amount {

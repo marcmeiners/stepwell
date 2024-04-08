@@ -45,6 +45,14 @@ func (bucket *TokenBucketLock) refillTokens(now time.Time) {
 	}
 }
 
+func (bucket *TokenBucketLock) GetCapacity() uint64 {
+	return bucket.capacity
+}
+
+func (bucket *TokenBucketLock) GetTokens() uint64 {
+	return bucket.tokens
+}
+
 func (bucket *TokenBucketLock) IsAllowed(amount uint64, now time.Time) bool {
 	bucket.Lock()
 	//Defer: Hold the lock and immediately release it before returning
