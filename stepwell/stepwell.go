@@ -11,7 +11,7 @@ import (
 //     Should the tokens issued before be revoked again?
 type StepWellInterface interface {
 	//Get a token for all the buckets on the path to the single bucket which is the root of the tree and the bottom layer of the StepWell tree structure
-	IsAllowed(port uint64, amount uint64, now time.Time) bool
+	IsAllowed(port uint64, amount int64, now time.Time) bool
 }
 
 type StepWell struct {
@@ -19,7 +19,7 @@ type StepWell struct {
 	Cores      []*StepWellNode
 	root       *StepWellNode
 	numCores   uint64
-	Capacity   uint64
+	Capacity   int64
 	refillRate float64
 	bucketType int
 }
@@ -34,7 +34,7 @@ type StepWellNode struct {
 	rightChild  *StepWellNode
 }
 
-func NewStepwell(numCores uint64, now time.Time, bucketType int, capacity uint64, refillRate float64) *StepWell {
+func NewStepwell(numCores uint64, now time.Time, bucketType int, capacity int64, refillRate float64) *StepWell {
 	if numCores <= 0 {
 		return nil
 	}
@@ -84,7 +84,7 @@ func NewStepwell(numCores uint64, now time.Time, bucketType int, capacity uint64
 	}
 }
 
-func (stepwell *StepWell) IsAllowed(port uint64, amount uint64, now time.Time) bool {
+func (stepwell *StepWell) IsAllowed(port uint64, amount int64, now time.Time) bool {
 	var curr *StepWellNode = stepwell.Cores[port]
 
 	if !curr.TokenBucket.IsAllowed(amount, now) {

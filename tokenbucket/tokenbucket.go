@@ -5,12 +5,12 @@ import (
 )
 
 type TokenBucketInterface interface {
-	IsAllowed(amount uint64, now time.Time) bool
-	GetCapacity() uint64
-	GetTokens() uint64
+	IsAllowed(amount int64, now time.Time) bool
+	GetCapacity() int64
+	GetTokens() int64
 }
 
-func NewTokenBucketByType(bucketType int, capacity uint64, refillRate float64, now time.Time) TokenBucketInterface {
+func NewTokenBucketByType(bucketType int, capacity int64, refillRate float64, now time.Time) TokenBucketInterface {
 	switch bucketType {
 	case 1:
 		return NewTokenBucketTrivial(capacity, refillRate, now)

@@ -4,18 +4,19 @@
 package tokenbucket
 
 import (
+	"stepwell/extensions"
 	"time"
 )
 
 type TokenBucketTrivial struct {
-	capacity   uint64
-	tokens     uint64
+	capacity   int64
+	tokens     int64
 	refillRate float64
 	// Store as Unix timestamp to be able to use atomic operations
 	lastRefill int64
 }
 
-func NewTokenBucketTrivial(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketTrivial {
+func NewTokenBucketTrivial(capacity int64, refillRate float64, lastRefill time.Time) *TokenBucketTrivial {
 	return &TokenBucketTrivial{
 		//total capacity of tokens to give out
 		capacity: capacity,
@@ -30,7 +31,7 @@ func NewTokenBucketTrivial(capacity uint64, refillRate float64, lastRefill time.
 func (bucket *TokenBucketTrivial) refillTokens(now time.Time) {
 	nowUnix := now.Unix()
 	duration := nowUnix - bucket.lastRefill
-	tokensToAdd := uint64(bucket.refillRate * float64(duration))
+	tokensToAdd := int64(bucket.refillRate * float64(duration))
 
 	if tokensToAdd > 0 {
 		bucket.lastRefill = now.Unix()
@@ -42,17 +43,19 @@ func (bucket *TokenBucketTrivial) refillTokens(now time.Time) {
 	}
 }
 
-func (bucket *TokenBucketTrivial) GetCapacity() uint64 {
+func (bucket *TokenBucketTrivial) GetCapacity() int64 {
 	return bucket.capacity
 }
 
-func (bucket *TokenBucketTrivial) GetTokens() uint64 {
+func (bucket *TokenBucketTrivial) GetTokens() int64 {
 	return bucket.tokens
 }
 
-func (bucket *TokenBucketTrivial) IsAllowed(amount uint64, now time.Time) bool {
+func (bucket *TokenBucketTrivial) IsAllowed(amount int64, now time.Time) bool {
 	bucket.refillTokens(now)
 	if bucket.tokens >= amount {
+		//Wait a few nanoseconds to show concurrency effect
+		extensions.ShortWait()
 		bucket.tokens -= amount
 		return true
 	}

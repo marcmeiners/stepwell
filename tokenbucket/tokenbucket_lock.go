@@ -4,13 +4,14 @@
 package tokenbucket
 
 import (
+	"stepwell/extensions"
 	"sync"
 	"time"
 )
 
 type TokenBucketLock struct {
-	capacity   uint64
-	tokens     uint64
+	capacity   int64
+	tokens     int64
 	refillRate float64
 	// Store as Unix timestamp to be able to use atomic operations
 	lastRefill int64
@@ -18,7 +19,7 @@ type TokenBucketLock struct {
 	sync.Mutex
 }
 
-func NewTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Time) *TokenBucketLock {
+func NewTokenBucketLock(capacity int64, refillRate float64, lastRefill time.Time) *TokenBucketLock {
 	return &TokenBucketLock{
 		//total capacity of tokens to give out
 		capacity: capacity,
@@ -33,7 +34,7 @@ func NewTokenBucketLock(capacity uint64, refillRate float64, lastRefill time.Tim
 func (bucket *TokenBucketLock) refillTokens(now time.Time) {
 	nowUnix := now.Unix()
 	duration := nowUnix - bucket.lastRefill
-	tokensToAdd := uint64(bucket.refillRate * float64(duration))
+	tokensToAdd := int64(bucket.refillRate * float64(duration))
 
 	if tokensToAdd > 0 {
 		bucket.lastRefill = now.Unix()
@@ -45,20 +46,21 @@ func (bucket *TokenBucketLock) refillTokens(now time.Time) {
 	}
 }
 
-func (bucket *TokenBucketLock) GetCapacity() uint64 {
+func (bucket *TokenBucketLock) GetCapacity() int64 {
 	return bucket.capacity
 }
 
-func (bucket *TokenBucketLock) GetTokens() uint64 {
+func (bucket *TokenBucketLock) GetTokens() int64 {
 	return bucket.tokens
 }
 
-func (bucket *TokenBucketLock) IsAllowed(amount uint64, now time.Time) bool {
+func (bucket *TokenBucketLock) IsAllowed(amount int64, now time.Time) bool {
 	bucket.Lock()
 	//Defer: Hold the lock and immediately release it before returning
 	defer bucket.Unlock()
 	bucket.refillTokens(now)
 	if bucket.tokens >= amount {
+		extensions.ShortWait()
 		bucket.tokens -= amount
 		return true
 	}

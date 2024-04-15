@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
-	test.TestTokenBucketOverflow()
+	//test.TestTokenBucketLoad()
+	test.TestStepWellLoad()
 }
