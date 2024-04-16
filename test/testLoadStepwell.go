@@ -28,16 +28,19 @@ func handleCoreRequests(stepwell *stepwell.StepWell, coreID uint64, stopChan <-c
 
 func measureTokenAmountStepwell(stepwell *stepwell.StepWell, stopChan <-chan struct{}) {
 	sleepDuration := time.Duration(1) * time.Nanosecond
+	min := stepwell.Capacity
+	fmt.Println("Starting token measurement.")
 	for {
 		select {
 		case <-stopChan: // Stop signal received
 			fmt.Println("Stopping token measurement.")
+			fmt.Printf("Minimum token amount in root Token Bucket: %d\n", min)
 			return
 		default:
 			//Go all the way up to the root token bucket of the stepwell structure
 			tokens := stepwell.Cores[0].Parent.Parent.Parent.Parent.TokenBucket.GetTokens()
-			if tokens < 0 {
-				fmt.Printf("Number of tokens left in the Token Bucket: %d\n", tokens)
+			if tokens < min {
+				min = tokens
 			}
 
 			time.Sleep(sleepDuration)
@@ -50,7 +53,7 @@ func TestStepWellLoad() {
 	capacity := int64(10)
 	refillRate := float64(1)
 	bucketType := 1
-	duration := 60 * time.Second
+	duration := 20 * time.Second
 
 	stopChans := make([]chan struct{}, numCores)
 	stopChanMeasurement := make(chan struct{})
@@ -69,9 +72,11 @@ func TestStepWellLoad() {
 	for _, stopChan := range stopChans {
 		close(stopChan)
 	}
-	close(stopChanMeasurement)
 
 	// Wait a bit for goroutines to clean up before ending the test
 	time.Sleep(1 * time.Second)
+	close(stopChanMeasurement)
+	time.Sleep(1 * time.Second)
+
 	fmt.Println("Test completed.")
 }

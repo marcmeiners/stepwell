@@ -27,15 +27,18 @@ func handleRequests(tokenbucket tokenbucket.TokenBucketInterface, coreID uint64,
 
 func measureTokenAmount(tokenbucket tokenbucket.TokenBucketInterface, stopChan <-chan struct{}) {
 	sleepDuration := time.Duration(1) * time.Nanosecond
+	min := tokenbucket.GetCapacity()
+	fmt.Println("Starting token measurement.")
 	for {
 		select {
 		case <-stopChan: // Stop signal received
 			fmt.Println("Stopping token measurement.")
+			fmt.Printf("Minimum token amount in Token Bucket: %d\n", min)
 			return
 		default:
 			tokens := tokenbucket.GetTokens()
-			if tokens < 0 {
-				fmt.Printf("Number of tokens left in the Token Bucket: %d\n", tokens)
+			if tokens < min {
+				min = tokens
 			}
 			time.Sleep(sleepDuration)
 		}
@@ -47,7 +50,7 @@ func TestTokenBucketLoad() {
 	capacity := int64(10)
 	refillRate := float64(1)
 	bucketType := 1
-	duration := 60 * time.Second
+	duration := 20 * time.Second
 
 	tokenbucket := tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, time.Now())
 
@@ -66,9 +69,8 @@ func TestTokenBucketLoad() {
 	for _, stopChan := range stopChans {
 		close(stopChan)
 	}
-	close(stopChanMeasurement)
 
-	// Wait a bit for goroutines to clean up before ending the test
 	time.Sleep(1 * time.Second)
-	fmt.Println("Test completed.")
+	close(stopChanMeasurement)
+	time.Sleep(1 * time.Second)
 }
