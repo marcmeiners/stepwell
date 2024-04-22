@@ -1,82 +1,64 @@
-// Test behavior of Stepwell / token buckets under certain amount of requests in certain time intervals
-
 package test
 
 import (
 	"fmt"
 	"stepwell/stepwell"
+	"sync"
 	"time"
 )
 
 // handleCoreRequests processes requests for a given core, using side channels to stop the routines
-func handleCoreRequests(stepwell *stepwell.StepWell, coreID uint64, stopChan <-chan struct{}) {
-	num_allowed := 0
+func handleCoreRequests(stepwell *stepwell.StepWell, coreID uint64, stopChan <-chan struct{}, testRunning *bool, sumIsAllowed *int64, lock *sync.Mutex) {
+	num_allowed := int64(0)
 	for {
 		select {
 		case <-stopChan: // Stop signal received
 			fmt.Printf("Stopping requests for core %d\n", coreID)
+			lock.Lock() // Acquire the lock before modifying the shared resource
+			*sumIsAllowed += num_allowed
+			lock.Unlock()
 			return
 		default:
 			requestTime := time.Now()
 			allowed := stepwell.IsAllowed(coreID, 1, requestTime)
-			if allowed {
+			if allowed && *testRunning {
 				num_allowed++
 			}
 		}
 	}
 }
 
-func measureTokenAmountStepwell(stepwell *stepwell.StepWell, stopChan <-chan struct{}) {
-	sleepDuration := time.Duration(1) * time.Nanosecond
-	min := stepwell.Capacity
-	fmt.Println("Starting token measurement.")
-	for {
-		select {
-		case <-stopChan: // Stop signal received
-			fmt.Println("Stopping token measurement.")
-			fmt.Printf("Minimum token amount in root Token Bucket: %d\n", min)
-			return
-		default:
-			//Go all the way up to the root token bucket of the stepwell structure
-			tokens := stepwell.Cores[0].Parent.Parent.Parent.Parent.TokenBucket.GetTokens()
-			if tokens < min {
-				min = tokens
-			}
-
-			time.Sleep(sleepDuration)
-		}
-	}
-}
-
 func TestStepWellLoad() {
-	numCores := uint64(64)
+	numCores := uint64(128)
 	capacity := int64(10)
 	refillRate := float64(1)
 	bucketType := 1
-	duration := 20 * time.Second
+	duration := 60 * time.Second
+
+	testRunning := false
+	var lock sync.Mutex
+	totalAllowed := int64(0)
 
 	stopChans := make([]chan struct{}, numCores)
-	stopChanMeasurement := make(chan struct{})
 
 	stepwell := stepwell.NewStepwell(numCores, time.Now(), bucketType, capacity, refillRate)
 
 	for i := 0; i < int(numCores); i++ {
 		stopChans[i] = make(chan struct{})
-		go handleCoreRequests(stepwell, uint64(i), stopChans[i])
+		go handleCoreRequests(stepwell, uint64(i), stopChans[i], &testRunning, &totalAllowed, &lock)
 	}
 
-	go measureTokenAmountStepwell(stepwell, stopChanMeasurement)
-
+	time.Sleep(1 * time.Second)
+	testRunning = true
 	time.Sleep(duration)
+	testRunning = false
 
 	for _, stopChan := range stopChans {
 		close(stopChan)
 	}
 
-	// Wait a bit for goroutines to clean up before ending the test
-	time.Sleep(1 * time.Second)
-	close(stopChanMeasurement)
 	time.Sleep(1 * time.Second)
 
 	fmt.Println("Test completed.")
+	fmt.Printf("Test Time: %.2f, Refill Rate: %.2f, Number of Tokens issued overall:%d", duration.Seconds(), refillRate, totalAllowed)
 }

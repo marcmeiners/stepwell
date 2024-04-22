@@ -6,5 +6,7 @@ import (
 
 func main() {
 	//test.TestTokenBucketLoad()
-	test.TestStepWellLoad()
+	//test.TestStepWellLoad()
+	test.TestStepWellPerformance()
+	//test.TestTokenBucketPerformance()
 }
