@@ -14,6 +14,15 @@ def compile_go_executable(source_path, output_name):
         exit(1)
     else:
         print(f"Successfully compiled {output_name}.")
+        
+# run test more than just once        
+def run_tests(test_function, num_cores):
+    results = []
+    for _ in range(3):
+        expected_tokens, actual_tokens = test_function(num_cores)
+        percentage_excess = (actual_tokens / expected_tokens) * 100
+        results.append(percentage_excess)
+    return sum(results) / len(results)
 
 def run_load_stepwell(num_cores):
     result = subprocess.run([directory_path + '/../exec', "testStepWellLoad", str(num_cores)], capture_output=True, text=True)
@@ -50,10 +59,10 @@ def main():
 
     # Process TokenBucket results
     for num_cores in cores:
-        expected_tokens, actual_tokens = run_load_tokenbucket(num_cores)
-        print(f"TokenBucket - Expected Number of Tokens: {expected_tokens}, Actual Number of Tokens: {actual_tokens}")
-        percentage_excess = (actual_tokens / expected_tokens) * 100
-        results_tokenbucket.append(percentage_excess)
+        avg_percentage = run_tests(run_load_tokenbucket, num_cores)
+        results_tokenbucket.append(avg_percentage)
+        print(f"TokenBucket - Cores: {num_cores}, Percentage of max allowed tokens: {avg_percentage}%")
+    
     
     # Plotting for TokenBucket
     plt.figure(figsize=(10, 5))
@@ -69,10 +78,9 @@ def main():
     
     # Process StepWell results
     for num_cores in cores:
-        expected_tokens, actual_tokens = run_load_stepwell(num_cores)
-        print(f"StepWell - Expected Number of Tokens: {expected_tokens}, Actual Number of Tokens: {actual_tokens}")
-        percentage_excess = (actual_tokens / expected_tokens) * 100
-        results_stepwell.append(percentage_excess)
+        avg_percentage = run_tests(run_load_stepwell, num_cores)
+        results_stepwell.append(avg_percentage)
+        print(f"StepWell - Cores: {num_cores}, Percentage of max allowed tokens: {avg_percentage}%")
 
     # Plotting for StepWell
     plt.figure(figsize=(10, 5))
