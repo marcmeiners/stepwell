@@ -27,12 +27,11 @@ func handleRequests(tokenbucket tokenbucket.TokenBucketInterface, coreID uint64,
 	}
 }
 
-func TestTokenBucketLoad() {
-	numCores := uint64(128)
+func TestTokenBucketLoad(numCores uint64) {
 	capacity := int64(10)
 	refillRate := float64(1)
 	bucketType := 1
-	duration := 60 * time.Second
+	duration := 10 * time.Second
 
 	testRunning := false
 	var lock sync.Mutex
@@ -58,6 +57,8 @@ func TestTokenBucketLoad() {
 
 	time.Sleep(1 * time.Second)
 
+	expected_tokens := float64(duration.Seconds()) * refillRate
+
 	fmt.Println("Test completed.")
-	fmt.Printf("Test Time: %.2f, Refill Rate: %.2f, Number of Tokens issued overall:%d", duration.Seconds(), refillRate, totalAllowed)
+	fmt.Printf("Expected: %.2f Actual: %d", expected_tokens, totalAllowed)
 }
