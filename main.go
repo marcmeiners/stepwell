@@ -24,10 +24,14 @@ func main() {
 	numCores := uint64(numCoresArg)
 
 	switch testType {
-	case "testStepWellLoad":
+	case "TestStepWellLoad":
 		test.TestStepWellLoad(numCores)
 	case "TestTokenBucketLoad":
 		test.TestTokenBucketLoad(numCores)
+	case "TestStepWellPerformance":
+		test.TestStepWellPerformance(numCores)
+	case "TestTokenBucketPerformance":
+		test.TestTokenBucketPerformance(numCores)
 	default:
 		fmt.Printf("Unknown test type: %s\n", testType)
 		os.Exit(1)

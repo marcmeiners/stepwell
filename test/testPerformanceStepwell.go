@@ -31,12 +31,11 @@ func handleCoreRequestsPerformance(stepwell *stepwell.StepWell, coreID uint64, s
 	}
 }
 
-func TestStepWellPerformance() {
-	numCores := uint64(8)
+func TestStepWellPerformance(numCores uint64) {
 	capacity := int64(10)
 	refillRate := float64(1)
 	bucketType := 1
-	numIters := int64(1000)
+	numIters := int64(100000)
 
 	testRunning := false
 	var lock sync.Mutex
@@ -70,6 +69,5 @@ func TestStepWellPerformance() {
 
 	time.Sleep(1 * time.Second)
 
-	fmt.Println("Test completed. Execution time in nanoseconds: ")
-	fmt.Println(duration.Nanoseconds())
+	fmt.Printf("Time: %d", duration.Nanoseconds())
 }

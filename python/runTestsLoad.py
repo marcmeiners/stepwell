@@ -16,7 +16,7 @@ def compile_go_executable(source_path, output_name):
         print(f"Successfully compiled {output_name}.")
         
 # run test more than just once        
-def run_tests(test_function, num_cores):
+def run_load_tests(test_function, num_cores):
     results = []
     for _ in range(3):
         expected_tokens, actual_tokens = test_function(num_cores)
@@ -25,7 +25,7 @@ def run_tests(test_function, num_cores):
     return sum(results) / len(results)
 
 def run_load_stepwell(num_cores):
-    result = subprocess.run([directory_path + '/../exec', "testStepWellLoad", str(num_cores)], capture_output=True, text=True)
+    result = subprocess.run([directory_path + '/../exec', "TestStepWellLoad", str(num_cores)], capture_output=True, text=True)
     output = result.stdout
     expected_tokens, actual_tokens = parse_output(output)
     return expected_tokens, actual_tokens
@@ -57,18 +57,18 @@ def main():
     results_tokenbucket = []
     results_stepwell = []
 
-    # Process TokenBucket results
+    # Process TokenBucket Load results
     for num_cores in cores:
-        avg_percentage = run_tests(run_load_tokenbucket, num_cores)
+        avg_percentage = run_load_tests(run_load_tokenbucket, num_cores)
         results_tokenbucket.append(avg_percentage)
         print(f"TokenBucket - Cores: {num_cores}, Percentage of max allowed tokens: {avg_percentage}%")
     
     
-    # Plotting for TokenBucket
+    # Plotting for TokenBucket Load
     plt.figure(figsize=(10, 5))
     plt.plot(cores, results_tokenbucket, marker='o')
     plt.xlabel('Number of Cores')
-    plt.ylabel('Percentage of the Expected Tokens Issued')
+    plt.ylabel('Percentage of the Max Amount of Tokens Issued')
     plt.title('TokenBucket Performance Analysis with Varying Cores')
     plt.grid(True)
     file_name = "performance_analysis_tokenbucket.png"
@@ -76,9 +76,27 @@ def main():
     plt.savefig(file_path, format='png', dpi=300)
     print(f"TokenBucket plot saved to {file_path}")
     
-    # Process StepWell results
+    # Process StepWell Load results
     for num_cores in cores:
-        avg_percentage = run_tests(run_load_stepwell, num_cores)
+        avg_percentage = run_load_tests(run_load_stepwell, num_cores)
+        results_stepwell.append(avg_percentage)
+        print(f"StepWell - Cores: {num_cores}, Percentage of max allowed tokens: {avg_percentage}%")
+
+    # Plotting for StepWell Load
+    plt.figure(figsize=(10, 5))
+    plt.plot(cores, results_stepwell, marker='o')
+    plt.xlabel('Number of Cores')
+    plt.ylabel('Percentage of the Max Amount of Tokens Issued')
+    plt.title('StepWell Performance Analysis with Varying Cores')
+    plt.grid(True)
+    file_name = "performance_analysis_stepwell.png"
+    file_path = os.path.join(directory_path, file_name)
+    plt.savefig(file_path, format='png', dpi=300)
+    print(f"StepWell plot saved to {file_path}")
+    
+    # Process Tokenbucket Performance
+    for num_cores in cores:
+        avg_percentage = run_load_tests(run_load_stepwell, num_cores)
         results_stepwell.append(avg_percentage)
         print(f"StepWell - Cores: {num_cores}, Percentage of max allowed tokens: {avg_percentage}%")
 
