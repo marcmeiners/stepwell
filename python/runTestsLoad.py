@@ -69,7 +69,7 @@ def main():
     plt.plot(cores, results_tokenbucket, marker='o')
     plt.xlabel('Number of Cores')
     plt.ylabel('Percentage of the Max Amount of Tokens Issued')
-    plt.title('TokenBucket Performance Analysis with Varying Cores')
+    plt.title('TokenBucket High Load Analysis with Varying Cores')
     plt.grid(True)
     file_name = "performance_analysis_tokenbucket.png"
     file_path = os.path.join(directory_path, file_name)
@@ -87,25 +87,7 @@ def main():
     plt.plot(cores, results_stepwell, marker='o')
     plt.xlabel('Number of Cores')
     plt.ylabel('Percentage of the Max Amount of Tokens Issued')
-    plt.title('StepWell Performance Analysis with Varying Cores')
-    plt.grid(True)
-    file_name = "performance_analysis_stepwell.png"
-    file_path = os.path.join(directory_path, file_name)
-    plt.savefig(file_path, format='png', dpi=300)
-    print(f"StepWell plot saved to {file_path}")
-    
-    # Process Tokenbucket Performance
-    for num_cores in cores:
-        avg_percentage = run_load_tests(run_load_stepwell, num_cores)
-        results_stepwell.append(avg_percentage)
-        print(f"StepWell - Cores: {num_cores}, Percentage of max allowed tokens: {avg_percentage}%")
-
-    # Plotting for StepWell
-    plt.figure(figsize=(10, 5))
-    plt.plot(cores, results_stepwell, marker='o')
-    plt.xlabel('Number of Cores')
-    plt.ylabel('Percentage of the Expected Tokens Issued')
-    plt.title('StepWell Performance Analysis with Varying Cores')
+    plt.title('StepWell High Load Analysis with Varying Cores')
     plt.grid(True)
     file_name = "performance_analysis_stepwell.png"
     file_path = os.path.join(directory_path, file_name)
