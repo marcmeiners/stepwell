@@ -73,36 +73,25 @@ def main():
         results_tokenbucket.append(avg_percentage)
         print(f"TokenBucket - Cores: {num_cores}, Percentage of max allowed tokens: {avg_percentage}%")
     
-    
-    # Plotting for TokenBucket Load
-    plt.figure(figsize=(10, 5))
-    plt.plot(cores, results_tokenbucket, marker='o')
-    plt.xlabel('Number of Cores')
-    plt.ylabel('Percentage of the Max Amount of Tokens Issued')
-    plt.title('TokenBucket High Load Analysis with Varying Cores')
-    plt.grid(True)
-    file_name = "performance_analysis_tokenbucket.png"
-    file_path = os.path.join(directory_path, file_name)
-    plt.savefig(file_path, format='png', dpi=300)
-    print(f"TokenBucket plot saved to {file_path}")
-    
     # Process StepWell Load results
     for num_cores in cores:
         avg_percentage = run_load_tests(run_load_stepwell, num_cores)
         results_stepwell.append(avg_percentage)
         print(f"StepWell - Cores: {num_cores}, Percentage of max allowed tokens: {avg_percentage}%")
 
-    # Plotting for StepWell Load
+    # Plotting both TokenBucket and StepWell Load results
     plt.figure(figsize=(10, 5))
-    plt.plot(cores, results_stepwell, marker='o')
+    plt.plot(cores, results_tokenbucket, marker='o', label='TokenBucket', color='blue')
+    plt.plot(cores, results_stepwell, marker='x', label='StepWell', color='green')
     plt.xlabel('Number of Cores')
     plt.ylabel('Percentage of the Max Amount of Tokens Issued')
-    plt.title('StepWell High Load Analysis with Varying Cores')
+    plt.title('High Load Analysis with Varying Cores')
+    plt.legend()
     plt.grid(True)
-    file_name = "performance_analysis_stepwell.png"
+    file_name = "performance_analysis_combined.png"
     file_path = os.path.join(directory_path, file_name)
     plt.savefig(file_path, format='png', dpi=300)
-    print(f"StepWell plot saved to {file_path}")
+    print(f"Combined plot saved to {file_path}")
 
 if __name__ == "__main__":
     main()
