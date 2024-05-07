@@ -4,9 +4,19 @@ import os
 
 directory_path = os.path.dirname(os.path.abspath(__file__))
 
+def get_go_binary_path():
+    config_file = os.path.join(directory_path, "go_path.conf")
+    if os.path.exists(config_file):
+        with open(config_file, "r") as file:
+            go_binary = file.readline().strip()
+    else:
+        go_binary = "go"
+    return go_binary
+
 def compile_go_executable(source_path, output_name):
-    command = ['go', 'build', '-o', output_name, source_path]
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    go_binary = get_go_binary_path()
+    command = [go_binary, 'build', '-o', output_name, source_path]
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     
     if result.returncode != 0:
         print("Error compiling Go executable:")
@@ -19,7 +29,7 @@ def compile_go_executable(source_path, output_name):
 def run_performance_test(executable_name, test_type, num_cores):
     results = []
     for _ in range(3):
-        result = subprocess.run([executable_name, test_type, str(num_cores)], capture_output=True, text=True)
+        result = subprocess.run([executable_name, test_type, str(num_cores)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         output = result.stdout
         results.append(parse_performance_output(output))
     return sum(results) / len(results)

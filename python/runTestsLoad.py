@@ -4,9 +4,19 @@ import os
 
 directory_path = os.path.dirname(os.path.abspath(__file__))
 
+def get_go_binary_path():
+    config_file = os.path.join(directory_path, "go_path.conf")
+    if os.path.exists(config_file):
+        with open(config_file, "r") as file:
+            go_binary = file.readline().strip()
+    else:
+        go_binary = "go"
+    return go_binary
+
 def compile_go_executable(source_path, output_name):
-    command = ['go', 'build', '-o', output_name, source_path]
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    go_binary = get_go_binary_path()
+    command = [go_binary, 'build', '-o', output_name, source_path]
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     
     if result.returncode != 0:
         print("Error compiling Go executable:")
@@ -25,13 +35,13 @@ def run_load_tests(test_function, num_cores):
     return sum(results) / len(results)
 
 def run_load_stepwell(num_cores):
-    result = subprocess.run([directory_path + '/../exec', "TestStepWellLoad", str(num_cores)], capture_output=True, text=True)
+    result = subprocess.run([directory_path + '/../exec', "TestStepWellLoad", str(num_cores)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     output = result.stdout
     expected_tokens, actual_tokens = parse_output(output)
     return expected_tokens, actual_tokens
 
 def run_load_tokenbucket(num_cores):
-    result = subprocess.run([directory_path + '/../exec', "TestTokenBucketLoad", str(num_cores)], capture_output=True, text=True)
+    result = subprocess.run([directory_path + '/../exec', "TestTokenBucketLoad", str(num_cores)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     output = result.stdout
     expected_tokens, actual_tokens = parse_output(output)
     return expected_tokens, actual_tokens
