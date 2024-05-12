@@ -28,11 +28,10 @@ func handleCoreRequests(stepwell *stepwell.StepWell, coreID uint64, stopChan <-c
 	}
 }
 
-func TestStepWellLoad(numCores uint64) {
-	capacity := int64(10)
-	refillRate := float64(1)
-	bucketType := 1
-	duration := 10 * time.Second
+func TestStepWellLoad(numCores uint64, bucketType int, duration int, refillRateInt int, capacityInt int) {
+	capacity := int64(capacityInt)
+	refillRate := float64(refillRateInt)
+	numSeconds := time.Duration(duration) * time.Second
 
 	testRunning := false
 	var lock sync.Mutex
@@ -49,7 +48,7 @@ func TestStepWellLoad(numCores uint64) {
 
 	time.Sleep(1 * time.Second)
 	testRunning = true
-	time.Sleep(duration)
+	time.Sleep(numSeconds)
 	testRunning = false
 
 	for _, stopChan := range stopChans {
@@ -58,7 +57,7 @@ func TestStepWellLoad(numCores uint64) {
 
 	time.Sleep(1 * time.Second)
 
-	expected_tokens := float64(duration.Seconds()) * refillRate
+	expected_tokens := float64(numSeconds.Seconds()) * refillRate
 
 	fmt.Println("Test completed.")
 	fmt.Printf("Expected: %.2f Actual: %d", expected_tokens, totalAllowed)

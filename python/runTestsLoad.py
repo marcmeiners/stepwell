@@ -1,5 +1,6 @@
 import subprocess
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 
 directory_path = os.path.dirname(os.path.abspath(__file__))
@@ -24,30 +25,32 @@ def compile_go_executable(source_path, output_name):
         exit(1)
     else:
         print(f"Successfully compiled {output_name}.")
-        
-# run test more than just once        
-def run_load_tests(test_function, num_cores):
+
+def run_load_tests(test_function, num_cores, bucket_type, duration, refill_rate, capacity):
     results = []
     for _ in range(3):
-        expected_tokens, actual_tokens = test_function(num_cores)
+        expected_tokens, actual_tokens = test_function(num_cores, bucket_type, duration, refill_rate, capacity)
         percentage_excess = (actual_tokens / expected_tokens) * 100
         results.append(percentage_excess)
-    return sum(results) / len(results)
+    mean_percentage = np.mean(results)
+    std_deviation = np.std(results)
+    return mean_percentage, std_deviation
 
-def run_load_stepwell(num_cores):
-    result = subprocess.run([directory_path + '/../exec', "TestStepWellLoad", str(num_cores)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+def run_load_stepwell(num_cores, bucket_type, duration, refill_rate, capacity):
+    args = [directory_path + '/../exec', "TestStepWellLoad", str(num_cores), str(bucket_type), str(duration), str(refill_rate), str(capacity)]
+    result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     output = result.stdout
     expected_tokens, actual_tokens = parse_output(output)
     return expected_tokens, actual_tokens
 
-def run_load_tokenbucket(num_cores):
-    result = subprocess.run([directory_path + '/../exec', "TestTokenBucketLoad", str(num_cores)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+def run_load_tokenbucket(num_cores, bucket_type, duration, refill_rate, capacity):
+    args = [directory_path + '/../exec', "TestTokenBucketLoad", str(num_cores), str(bucket_type), str(duration), str(refill_rate), str(capacity)]
+    result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     output = result.stdout
     expected_tokens, actual_tokens = parse_output(output)
     return expected_tokens, actual_tokens
 
 def parse_output(output):
-    # Split the output by lines and parse tokens information
     lines = output.split('\n')
     for line in lines:
         if "Expected" in line and "Actual" in line:
@@ -63,35 +66,40 @@ def main():
     
     compile_go_executable(go_source_path, executable_name)
     
-    cores = [4, 8, 16, 32, 64]
+    cores = [1, 2, 4, 8, 32, 64]
+    bucket_type = 1
+    duration = 10
+    refill_rate = 100
+    capacity = 10
     results_tokenbucket = []
+    errors_tokenbucket = []
     results_stepwell = []
+    errors_stepwell = []
 
-    # Process TokenBucket Load results
     for num_cores in cores:
-        avg_percentage = run_load_tests(run_load_tokenbucket, num_cores)
+        avg_percentage, std_dev = run_load_tests(run_load_tokenbucket, num_cores, bucket_type, duration, refill_rate, capacity)
         results_tokenbucket.append(avg_percentage)
-        print(f"TokenBucket - Cores: {num_cores}, Percentage of max allowed tokens: {avg_percentage}%")
-    
-    # Process StepWell Load results
-    for num_cores in cores:
-        avg_percentage = run_load_tests(run_load_stepwell, num_cores)
-        results_stepwell.append(avg_percentage)
-        print(f"StepWell - Cores: {num_cores}, Percentage of max allowed tokens: {avg_percentage}%")
+        errors_tokenbucket.append(std_dev)
+        print(f"TokenBucket - Cores: {num_cores}, Avg Percentage: {avg_percentage}%, Std Dev: {std_dev}%")
 
-    # Plotting both TokenBucket and StepWell Load results
+    for num_cores in cores:
+        avg_percentage, std_dev = run_load_tests(run_load_stepwell, num_cores, bucket_type, duration, refill_rate, capacity)
+        results_stepwell.append(avg_percentage)
+        errors_stepwell.append(std_dev)
+        print(f"StepWell - Cores: {num_cores}, Avg Percentage: {avg_percentage}%, Std Dev: {std_dev}%")
+
     plt.figure(figsize=(10, 5))
-    plt.plot(cores, results_tokenbucket, marker='o', label='TokenBucket', color='blue')
-    plt.plot(cores, results_stepwell, marker='x', label='StepWell', color='green')
+    plt.errorbar(cores, results_tokenbucket, yerr=errors_tokenbucket, label='TokenBucket', marker='o', capsize=5, color='blue')
+    plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='StepWell', marker='x', capsize=5, color='green')
     plt.xlabel('Number of Cores')
     plt.ylabel('Percentage of the Max Amount of Tokens Issued')
     plt.title('High Load Analysis with Varying Cores')
     plt.legend()
     plt.grid(True)
-    file_name = "performance_analysis_combined.png"
+    file_name = "high_load_analysis_combined.png"
     file_path = os.path.join(directory_path, file_name)
     plt.savefig(file_path, format='png', dpi=300)
-    print(f"Combined plot saved to {file_path}")
+    print(f"Combined plot with error bars saved to {file_path}")
 
 if __name__ == "__main__":
     main()
