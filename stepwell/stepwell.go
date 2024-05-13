@@ -39,43 +39,34 @@ func NewStepwell(numCores uint64, now time.Time, bucketType int, capacity int64,
 		return nil
 	}
 
-	var currentLevel []*StepWellNode
+	var nodes []*StepWellNode
 	root := &StepWellNode{TokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now)}
-	currentLevel = append(currentLevel, root)
+	nodes = append(nodes, root)
 
-	var currentLeaves uint64 = 1
-	var addedLeaves uint64 = 0
-
-	for currentLeaves < numCores {
+	for levelCount := uint64(1); levelCount < numCores; {
 		var nextLevel []*StepWellNode
-		// First pass: Add a left child to each node in the current level
-		for _, node := range currentLevel {
+		for _, node := range nodes {
+			if levelCount >= numCores {
+				break
+			}
 			leftChild := &StepWellNode{TokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now), Parent: node}
 			node.leftChild = leftChild
 			nextLevel = append(nextLevel, leftChild)
-		}
-		addedLeaves = currentLeaves
+			levelCount++
 
-		// Second pass: Add a right child to nodes in the current level until reaching numCores
-		for _, node := range currentLevel {
-			if addedLeaves < numCores {
-				rightChild := &StepWellNode{TokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now), Parent: node}
-				node.rightChild = rightChild
-				//After a loop iteration the nextLevel array first contains all "left" children and and the all "right" children.
-				//In the next iteration, if it is the last one, there might be nodes with two children and nodes with only one child.
-				//Because of the order mentioned, the nodes with 2 children will be distributed over the whole tree "width". Thus we have better load balancing inside the tree.
-				nextLevel = append(nextLevel, rightChild)
-				addedLeaves++
-			} else {
+			if levelCount >= numCores {
 				break
 			}
+			rightChild := &StepWellNode{TokenBucket: tokenbucket.NewTokenBucketByType(bucketType, capacity, refillRate, now), Parent: node}
+			node.rightChild = rightChild
+			nextLevel = append(nextLevel, rightChild)
+			levelCount++
 		}
-		currentLeaves = addedLeaves
-		currentLevel = nextLevel
+		nodes = nextLevel
 	}
 
 	return &StepWell{
-		Cores:      currentLevel,
+		Cores:      nodes,
 		root:       root,
 		numCores:   numCores,
 		Capacity:   capacity,
