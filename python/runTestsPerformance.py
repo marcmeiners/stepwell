@@ -49,8 +49,11 @@ def main():
     
     compile_go_executable(go_source_path, executable_name)
     
-    cores = [1, 2, 4, 8, 32, 64]
-    bucket_types = [1, 2, 3, 4]
+    cores = [1, 2, 4]
+    duration = 100 #number of requests in this test
+    refill_rate = 100
+    capacity = 10
+    bucket_types = [1]
     bucket_labels = {
         1: "Tokenbucket Trivial",
         2: "Tokenbucket Atomic with Loops",
@@ -62,7 +65,7 @@ def main():
 
     # Run StepWell tests once per core count
     for num_cores in cores:
-        results_sw = run_performance_test(executable_name, "TestStepWellPerformance", num_cores, 1, 100000, 1000, 10)
+        results_sw = run_performance_test(executable_name, "TestStepWellPerformance", num_cores, 1, duration, refill_rate, capacity)
         mean_sw = np.mean(results_sw)
         std_sw = np.std(results_sw)
         results_stepwell.append(mean_sw)
@@ -76,7 +79,7 @@ def main():
         errors_tokenbucket = []
 
         for num_cores in cores:
-            results_tb = run_performance_test(executable_name, "TestTokenBucketPerformance", num_cores, bucket_type, 1000, 1000, 10)
+            results_tb = run_performance_test(executable_name, "TestTokenBucketPerformance", num_cores, bucket_type, duration, refill_rate, capacity)
             mean_tb = np.mean(results_tb)
             std_tb = np.std(results_tb)
             results_tokenbucket.append(mean_tb)
@@ -89,6 +92,7 @@ def main():
         plt.xlabel('Number of Cores')
         plt.ylabel('Execution Time per Request (ns/request)')
         plt.title(f'Performance Analysis by Core Count - {label}')
+        plt.figtext(0.5, 0.03, f'Number of Requests: {duration}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=9, style='italic')
         plt.xticks(cores)
         plt.grid(True, which='both', linestyle='--', linewidth=0.5)
         if bucket_type == 3:  # Apply log scale only for "Tokenbucket with Locks"

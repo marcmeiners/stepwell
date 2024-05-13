@@ -94,6 +94,8 @@ def main():
     plt.xlabel('Number of Cores')
     plt.ylabel('Percentage of the Max Amount of Tokens Issued')
     plt.title('High Load Analysis with Varying Cores')
+    plt.figtext(0.5, 0.03, f'Runtime: {duration}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=9, style='italic')
+    plt.xticks(cores)
     plt.legend()
     plt.grid(True)
     file_name = "high_load_analysis_combined.png"
