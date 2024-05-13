@@ -57,13 +57,23 @@ def main():
         3: "Tokenbucket with Locks",
         4: "Tokenbucket Helia"
     }
+    results_stepwell = []
+    errors_stepwell = []
 
+    # Run StepWell tests once per core count
+    for num_cores in cores:
+        results_sw = run_performance_test(executable_name, "TestStepWellPerformance", num_cores, 1, 100000, 1000, 10)
+        mean_sw = np.mean(results_sw)
+        std_sw = np.std(results_sw)
+        results_stepwell.append(mean_sw)
+        errors_stepwell.append(std_sw)
+        print(f"StepWell Performance {num_cores} cores: {mean_sw:.3f} ns/request ± {std_sw:.3f}")
+
+    # Run TokenBucket tests for each bucket type
     for bucket_type in bucket_types:
         label = bucket_labels[bucket_type]
         results_tokenbucket = []
         errors_tokenbucket = []
-        results_stepwell = []
-        errors_stepwell = []
 
         for num_cores in cores:
             results_tb = run_performance_test(executable_name, "TestTokenBucketPerformance", num_cores, bucket_type, 1000, 1000, 10)
@@ -71,15 +81,7 @@ def main():
             std_tb = np.std(results_tb)
             results_tokenbucket.append(mean_tb)
             errors_tokenbucket.append(std_tb)
-
-            results_sw = run_performance_test(executable_name, "TestStepWellPerformance", num_cores, 1, 100000, 1000, 10)
-            mean_sw = np.mean(results_sw)
-            std_sw = np.std(results_sw)
-            results_stepwell.append(mean_sw)
-            errors_stepwell.append(std_sw)
-            
             print(f"{label} Performance {num_cores} cores: {mean_tb:.3f} ns/request ± {std_tb:.3f}")
-            print(f"StepWell Performance {num_cores} cores: {mean_sw:.3f} ns/request ± {std_sw:.3f}")
 
         plt.figure(figsize=(10, 5))
         plt.errorbar(cores, results_tokenbucket, yerr=errors_tokenbucket, label=label, marker='o', color='blue', capsize=5)
@@ -89,6 +91,8 @@ def main():
         plt.title(f'Performance Analysis by Core Count - {label}')
         plt.xticks(cores)
         plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+        if bucket_type == 3:  # Apply log scale only for "Tokenbucket with Locks"
+            plt.yscale('log')
         plt.legend()
         file_name = f"performance_comparison_{bucket_type}.png"
         file_path = os.path.join(directory_path, file_name)
