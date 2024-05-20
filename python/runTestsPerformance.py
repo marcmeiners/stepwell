@@ -91,6 +91,7 @@ def main():
         plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='StepWell w/ Trivial Tokenbucket', marker='x', color='green', capsize=5)
         plt.xlabel('Number of Cores')
         plt.ylabel('Execution Time per Request (ns/request)')
+        plt.ylim(0, None)
         plt.title(f'Performance Analysis by Core Count - {label}')
         plt.figtext(0.5, 0.007, f'Number of Requests: {duration}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=9, style='italic')
         plt.xticks(cores)

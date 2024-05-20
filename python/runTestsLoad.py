@@ -93,6 +93,7 @@ def main():
     plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='StepWell', marker='x', capsize=5, color='green')
     plt.xlabel('Number of Cores')
     plt.ylabel('Percentage of the Max Amount of Tokens Issued')
+    plt.ylim(0, None)
     plt.title('High Load Analysis with Varying Cores')
     plt.figtext(0.5, 0.007, f'Runtime: {duration}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=9, style='italic')
     plt.xticks(cores)
