@@ -54,7 +54,7 @@ func TestStepWellPerformance(numCores uint64, bucketType int, duration int, refi
 		go handleCoreRequestsPerformance(stepwell, uint64(i), stopChans[i], numIters, &testRunning, &sumFinished, &lock)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	testRunning = true
 	start := time.Now()
@@ -71,7 +71,7 @@ func TestStepWellPerformance(numCores uint64, bucketType int, duration int, refi
 		close(stopChan)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	fmt.Printf("Time: %d", measuredDuration.Nanoseconds())
 }

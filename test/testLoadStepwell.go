@@ -51,7 +51,7 @@ func TestStepWellLoad(numCores uint64, bucketType int, duration int, refillRateI
 		go handleCoreRequests(stepwell, uint64(i), stopChans[i], &testRunning, &totalAllowed, &lock)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 	testRunning = true
 	time.Sleep(numSeconds)
 	testRunning = false
@@ -60,7 +60,7 @@ func TestStepWellLoad(numCores uint64, bucketType int, duration int, refillRateI
 		close(stopChan)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	expected_tokens := float64(numSeconds.Seconds()) * refillRate
 

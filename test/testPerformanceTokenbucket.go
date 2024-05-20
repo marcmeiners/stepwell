@@ -56,7 +56,7 @@ func TestTokenBucketPerformance(numCores uint64, bucketType int, duration int, r
 		go handleRequestsPerformance(tokenbucket, uint64(i), stopChans[i], numIters, &testRunning, &sumFinished, &lock)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 	testRunning = true
 	start := time.Now()
 
@@ -74,7 +74,7 @@ func TestTokenBucketPerformance(numCores uint64, bucketType int, duration int, r
 		close(stopChan)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	fmt.Printf("Time: %d", measuredDuration.Nanoseconds())
 }

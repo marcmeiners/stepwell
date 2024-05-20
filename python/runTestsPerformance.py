@@ -28,7 +28,7 @@ def compile_go_executable(source_path, output_name):
 
 def run_performance_test(executable_name, test_type, num_cores, bucket_type, duration, refill_rate, capacity):
     results = []
-    for _ in range(20):
+    for _ in range(30):
         args = [executable_name, test_type, str(num_cores), str(bucket_type), str(duration), str(refill_rate), str(capacity)]
         result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         output = result.stdout
@@ -50,8 +50,8 @@ def main():
     compile_go_executable(go_source_path, executable_name)
     
     cores = [1, 2, 4, 8, 32, 64]
-    duration = 1000000 #number of requests in this test
-    refill_rate = 100
+    duration = 2000000 #number of requests in this test
+    refill_rate = 10
     capacity = 10
     bucket_types = [1,2,3,4]
     bucket_labels = {

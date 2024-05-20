@@ -50,7 +50,7 @@ func TestTokenBucketLoad(numCores uint64, bucketType int, duration int, refillRa
 		go handleRequests(tokenbucket, uint64(i), stopChans[i], &testRunning, &totalAllowed, &lock)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 	testRunning = true
 	time.Sleep(numSeconds)
 	testRunning = false
@@ -59,7 +59,7 @@ func TestTokenBucketLoad(numCores uint64, bucketType int, duration int, refillRa
 		close(stopChan)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	expected_tokens := float64(numSeconds.Seconds()) * refillRate
 
