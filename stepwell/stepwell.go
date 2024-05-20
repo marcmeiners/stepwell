@@ -44,6 +44,7 @@ func NewStepwell(numCores uint64, now time.Time, bucketType int, capacity int64,
 	nodes = append(nodes, root)
 
 	for levelCount := uint64(1); levelCount < numCores; {
+		levelCount = 0
 		var nextLevel []*StepWellNode
 		for _, node := range nodes {
 			if levelCount >= numCores {

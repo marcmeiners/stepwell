@@ -49,11 +49,11 @@ def main():
     
     compile_go_executable(go_source_path, executable_name)
     
-    cores = [1, 2, 4]
-    duration = 100 #number of requests in this test
+    cores = [1, 2, 4, 8, 32, 64]
+    duration = 1000000 #number of requests in this test
     refill_rate = 100
     capacity = 10
-    bucket_types = [1]
+    bucket_types = [1,2,3,4]
     bucket_labels = {
         1: "Tokenbucket Trivial",
         2: "Tokenbucket Atomic with Loops",
@@ -92,7 +92,7 @@ def main():
         plt.xlabel('Number of Cores')
         plt.ylabel('Execution Time per Request (ns/request)')
         plt.title(f'Performance Analysis by Core Count - {label}')
-        plt.figtext(0.5, 0.03, f'Number of Requests: {duration}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=9, style='italic')
+        plt.figtext(0.5, 0.007, f'Number of Requests: {duration}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=9, style='italic')
         plt.xticks(cores)
         plt.grid(True, which='both', linestyle='--', linewidth=0.5)
         if bucket_type == 3:  # Apply log scale only for "Tokenbucket with Locks"

@@ -68,8 +68,8 @@ def main():
     
     cores = [1, 2, 4, 8, 32, 64]
     bucket_type = 1
-    duration = 10
-    refill_rate = 100
+    duration = 10 #number of seconds in this test
+    refill_rate = 10
     capacity = 10
     results_tokenbucket = []
     errors_tokenbucket = []
@@ -94,7 +94,7 @@ def main():
     plt.xlabel('Number of Cores')
     plt.ylabel('Percentage of the Max Amount of Tokens Issued')
     plt.title('High Load Analysis with Varying Cores')
-    plt.figtext(0.5, 0.03, f'Runtime: {duration}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=9, style='italic')
+    plt.figtext(0.5, 0.007, f'Runtime: {duration}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=9, style='italic')
     plt.xticks(cores)
     plt.legend()
     plt.grid(True)
