@@ -71,7 +71,7 @@ def main():
     results_stepwell = []
     errors_stepwell = []
     for num_cores in cores:
-        mean_sw, std_sw = run_load_tests(executable_name, "TestStepWellPerformance", num_cores, 1, duration, refill_rate, capacity)
+        mean_sw, std_sw = run_load_tests(executable_name, "TestStepWellLoad", num_cores, 1, duration, refill_rate, capacity)
         results_stepwell.append(mean_sw)
         errors_stepwell.append(std_sw)
         print(f"StepWell Performance {num_cores} cores: {mean_sw:.3f} % ± {std_sw:.3f}")
@@ -83,7 +83,7 @@ def main():
         errors_tokenbucket = []
 
         for num_cores in cores:
-            mean_tb, std_tb = run_load_tests(executable_name, "TestTokenBucketPerformance", num_cores, bucket_type, duration, refill_rate, capacity)
+            mean_tb, std_tb = run_load_tests(executable_name, "TestTokenBucketLoad", num_cores, bucket_type, duration, refill_rate, capacity)
             results_tokenbucket.append(mean_tb)
             errors_tokenbucket.append(std_tb)
             print(f"{label} Performance {num_cores} cores: {mean_tb:.3f} % ± {std_tb:.3f}")
@@ -99,7 +99,7 @@ def main():
         plt.xticks(cores)
         plt.grid(True, which='both', linestyle='--', linewidth=0.5)
         plt.legend()
-        file_name = f"performance_comparison_{bucket_type}.png"
+        file_name = f"high_load_analysis_{bucket_type}.png"
         file_path = os.path.join(directory_path, file_name)
         plt.savefig(file_path, format='png', dpi=300)
         plt.close()
