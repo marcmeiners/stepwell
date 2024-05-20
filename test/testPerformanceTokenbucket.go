@@ -2,12 +2,17 @@ package test
 
 import (
 	"fmt"
+	"stepwell/extensions"
 	"stepwell/tokenbucket"
 	"sync"
 	"time"
 )
 
 func handleRequestsPerformance(tokenbucket tokenbucket.TokenBucketInterface, coreID uint64, stopChan <-chan struct{}, numIters int64, testRunning *bool, sumFinished *int64, lock *sync.Mutex) {
+	err := extensions.PinToCore(int(coreID))
+	if err != nil {
+		fmt.Printf("Failed to pin goroutine to core %d: %v\n", coreID, err)
+	}
 	num_executed := int64(0)
 	for {
 		select {

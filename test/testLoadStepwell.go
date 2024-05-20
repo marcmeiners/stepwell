@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"stepwell/extensions"
 	"stepwell/stepwell"
 	"sync"
 	"time"
@@ -9,6 +10,10 @@ import (
 
 // handleCoreRequests processes requests for a given core, using side channels to stop the routines
 func handleCoreRequests(stepwell *stepwell.StepWell, coreID uint64, stopChan <-chan struct{}, testRunning *bool, sumIsAllowed *int64, lock *sync.Mutex) {
+	err := extensions.PinToCore(int(coreID))
+	if err != nil {
+		fmt.Printf("Failed to pin goroutine to core %d: %v\n", coreID, err)
+	}
 	num_allowed := int64(0)
 	for {
 		select {
