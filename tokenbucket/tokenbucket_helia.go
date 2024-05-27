@@ -47,17 +47,20 @@ func (bucket *TokenBucketHelia) IsAllowed(amount int64, now time.Time) bool {
 	nowUnix := now.UnixNano()
 	for {
 		latestTimestamp := atomic.LoadInt64(&bucket.timestamp)
+		newTimestamp := int64(0)
+
 		if nowUnix > latestTimestamp {
-			latestTimestamp = nowUnix
+			newTimestamp = nowUnix + int64(packetTime)
+		} else {
+			newTimestamp = latestTimestamp + int64(packetTime)
 		}
 
-		newTimestamp := latestTimestamp + int64(packetTime)
-		if newTimestamp <= nowUnix+int64(T) {
-			if atomic.CompareAndSwapInt64(&bucket.timestamp, latestTimestamp, newTimestamp) {
-				return true
-			}
-		} else {
+		if newTimestamp > nowUnix+int64(T) {
 			return false
+		}
+
+		if atomic.CompareAndSwapInt64(&bucket.timestamp, latestTimestamp, newTimestamp) {
+			return true
 		}
 	}
 }
