@@ -3,6 +3,7 @@
 package tokenbucket
 
 import (
+	"sync/atomic"
 	"time"
 )
 
@@ -10,14 +11,14 @@ type TokenBucketHelia struct {
 	capacity int64
 	//refill rate: packets/second -> take inverse to avoid further divisions in IsAllowed()
 	refillRateInverse float64
-	timestamp         time.Time
+	timestamp         int64
 }
 
 func NewTokenBucketHelia(capacity int64, refillRate float64, timestamp time.Time) *TokenBucketHelia {
 	return &TokenBucketHelia{
 		capacity:          capacity,
 		refillRateInverse: 1 / refillRate,
-		timestamp:         timestamp,
+		timestamp:         timestamp.UnixNano(),
 	}
 }
 
@@ -27,29 +28,37 @@ func (bucket *TokenBucketHelia) GetCapacity() int64 {
 
 func (bucket *TokenBucketHelia) GetTokens() int64 {
 	now := time.Now()
-	if now.After(bucket.timestamp) {
+	nowUnix := now.UnixNano()
+	latestTimestamp := atomic.LoadInt64(&bucket.timestamp)
+	if nowUnix >= latestTimestamp {
 		return 0
 	} else {
-		duration := bucket.timestamp.Sub(now)
+		duration := time.Duration(latestTimestamp - nowUnix)
 		durationInSeconds := float64(duration) / float64(time.Second)
-		return int64(durationInSeconds / (bucket.refillRateInverse))
+		return int64(durationInSeconds / bucket.refillRateInverse)
 	}
 }
 
+// time.Duration is a type having int64 as its underlying type, which stores the duration in nanoseconds.
 func (bucket *TokenBucketHelia) IsAllowed(amount int64, now time.Time) bool {
 	T := time.Duration(float64(bucket.capacity) * bucket.refillRateInverse * float64(time.Second))
 	packetTime := time.Duration(float64(amount) * bucket.refillRateInverse * float64(time.Second))
 
-	latestTimestamp := bucket.timestamp
-	if now.After(bucket.timestamp) {
-		latestTimestamp = now
-	}
+	nowUnix := now.UnixNano()
+	for {
+		latestTimestamp := atomic.LoadInt64(&bucket.timestamp)
+		if nowUnix > latestTimestamp {
+			latestTimestamp = nowUnix
+		}
 
-	if !latestTimestamp.Add(packetTime).After(now.Add(T)) {
-		bucket.timestamp = latestTimestamp.Add(packetTime)
-		return true
-	} else {
-		return false
+		newTimestamp := latestTimestamp + int64(packetTime)
+		if newTimestamp <= nowUnix+int64(T) {
+			if atomic.CompareAndSwapInt64(&bucket.timestamp, latestTimestamp, newTimestamp) {
+				return true
+			}
+		} else {
+			return false
+		}
 	}
 }
 
