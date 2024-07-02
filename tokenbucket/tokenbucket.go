@@ -20,6 +20,8 @@ func NewTokenBucketByType(bucketType int, capacity int64, refillRate float64, no
 		return NewTokenBucketLock(capacity, refillRate, now)
 	case 4:
 		return NewTokenBucketHelia(capacity, refillRate, now)
+	case 5:
+		return NewTokenBucketAtomicStructs(capacity, refillRate, now)
 	default:
 		return NewTokenBucketTrivial(capacity, refillRate, now)
 	}
