@@ -26,9 +26,9 @@ def compile_go_executable(source_path, output_name):
     else:
         print(f"Successfully compiled {output_name}.")
 
-def run_load_tests(executable_name, test_type, num_cores, bucket_type, duration, refill_rate, capacity):
+def run_load_tests(num_exec, executable_name, test_type, num_cores, bucket_type, duration, refill_rate, capacity):
     results = []
-    for _ in range(3):
+    for _ in range(num_exec):
         args = [executable_name, test_type, str(num_cores), str(bucket_type), str(duration), str(refill_rate), str(capacity)]
         result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         output = result.stdout
@@ -57,6 +57,7 @@ def main():
     
     cores = [1, 2, 4, 8, 32, 64]
     duration = 10 # number of seconds in this test
+    num_exec = 3
     refill_rate = 10
     capacity = 10
     bucket_types = [1, 2, 3, 4]
@@ -66,45 +67,45 @@ def main():
         3: "Tokenbucket with Locks",
         4: "Tokenbucket Helia"
     }
-    
+    plt.figure(figsize=(10, 5))
+    colors = ['blue', 'red', 'purple', 'orange']
+
     # Run StepWell tests once per core count
     results_stepwell = []
     errors_stepwell = []
     for num_cores in cores:
-        mean_sw, std_sw = run_load_tests(executable_name, "TestStepWellLoad", num_cores, 1, duration, refill_rate, capacity)
+        mean_sw, std_sw = run_load_tests(num_exec, executable_name, "TestStepWellLoad", num_cores, 1, duration, refill_rate, capacity)
         results_stepwell.append(mean_sw)
         errors_stepwell.append(std_sw)
         print(f"StepWell Performance {num_cores} cores: {mean_sw:.3f} % ± {std_sw:.3f}")
 
-    # Run TokenBucket tests for each bucket type and generate plots
-    for bucket_type in bucket_types:
+    plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='StepWell w/ Trivial Tokenbucket', marker='x', color='green', capsize=5)
+    
+    # Run TokenBucket tests for each bucket type and collect data for the plot
+    for idx, bucket_type in enumerate(bucket_types):
         label = bucket_labels[bucket_type]
         results_tokenbucket = []
         errors_tokenbucket = []
-
         for num_cores in cores:
-            mean_tb, std_tb = run_load_tests(executable_name, "TestTokenBucketLoad", num_cores, bucket_type, duration, refill_rate, capacity)
+            mean_tb, std_tb = run_load_tests(num_exec,executable_name, "TestTokenBucketLoad", num_cores, bucket_type, duration, refill_rate, capacity)
             results_tokenbucket.append(mean_tb)
             errors_tokenbucket.append(std_tb)
             print(f"{label} Performance {num_cores} cores: {mean_tb:.3f} % ± {std_tb:.3f}")
-
-        max_y_value = max(max(results_tokenbucket), 120)
-        plt.figure(figsize=(10, 5))
-        plt.errorbar(cores, results_tokenbucket, yerr=errors_tokenbucket, label=label, marker='o', color='blue', capsize=5)
-        plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='StepWell w/ Trivial Tokenbucket', marker='x', color='green', capsize=5)
-        plt.xlabel('Number of Cores')
-        plt.ylabel('Percentage of the Max Amount of Tokens Issued')
-        plt.ylim(0, max_y_value)
-        plt.title(f'High Load Analysis with Varying Cores - {label}')
-        plt.figtext(0.5, 0.007, f'Runtime: {duration}s, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=9, style='italic')
-        plt.xticks(cores)
-        plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-        plt.legend()
-        file_name = f"high_load_analysis_{bucket_type}.png"
-        file_path = os.path.join(directory_path, file_name)
-        plt.savefig(file_path, format='png', dpi=300)
-        plt.close()
-        print(f"High Load Analysis plot for {label} saved to {file_path}")
+        plt.errorbar(cores, results_tokenbucket, yerr=errors_tokenbucket, label=label, marker='o', capsize=5, color=colors[idx])
+    
+    plt.xlabel('Number of Cores', fontsize=16)
+    plt.ylabel('Percentage of Tokens Issued', fontsize=16)
+    #plt.title('High Load Analysis with Varying Cores')
+    plt.figtext(0.5, 0.007, f'Runtime: {duration}s, Test Runs: {num_exec}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=12, style='italic')
+    plt.xticks(cores)
+    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+    plt.legend(fontsize=14)
+    plt.subplots_adjust(bottom=0.15)
+    file_name = "high_load_analysis_combined.svg"
+    file_path = os.path.join(directory_path, file_name)
+    plt.savefig(file_path, format='svg', dpi=300)
+    plt.close()
+    print(f"High Load Analysis plot saved to {file_path}")
 
 if __name__ == "__main__":
     main()

@@ -26,9 +26,9 @@ def compile_go_executable(source_path, output_name):
     else:
         print(f"Successfully compiled {output_name}.")
 
-def run_performance_test(executable_name, test_type, num_cores, bucket_type, duration, refill_rate, capacity):
+def run_performance_test(num_exec, executable_name, test_type, num_cores, bucket_type, duration, refill_rate, capacity):
     results = []
-    for _ in range(30):
+    for _ in range(num_exec):
         args = [executable_name, test_type, str(num_cores), str(bucket_type), str(duration), str(refill_rate), str(capacity)]
         result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         output = result.stdout
@@ -51,6 +51,7 @@ def main():
     
     cores = [1, 2, 4, 8, 32, 64]
     duration = 2000000 #number of requests in this test
+    num_exec = 30
     refill_rate = 10
     capacity = 10
     bucket_types = [1,2,3,4]
@@ -60,50 +61,54 @@ def main():
         3: "Tokenbucket with Locks",
         4: "Tokenbucket Helia"
     }
+    
+    plt.figure(figsize=(10, 5))
+    colors = ['blue', 'red', 'purple', 'orange']
+    
     results_stepwell = []
     errors_stepwell = []
 
     # Run StepWell tests once per core count
     for num_cores in cores:
-        results_sw = run_performance_test(executable_name, "TestStepWellPerformance", num_cores, 1, duration, refill_rate, capacity)
+        results_sw = run_performance_test(num_exec, executable_name, "TestStepWellPerformance", num_cores, 1, duration, refill_rate, capacity)
         mean_sw = np.mean(results_sw)
         std_sw = np.std(results_sw)
         results_stepwell.append(mean_sw)
         errors_stepwell.append(std_sw)
         print(f"StepWell Performance {num_cores} cores: {mean_sw:.3f} ns/request ± {std_sw:.3f}")
 
-    # Run TokenBucket tests for each bucket type
-    for bucket_type in bucket_types:
+    plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='StepWell w/ Trivial Tokenbucket', marker='x', color='green', capsize=5)
+
+    # Run TokenBucket tests for each bucket type and plot
+    for idx, bucket_type in enumerate(bucket_types):
         label = bucket_labels[bucket_type]
         results_tokenbucket = []
         errors_tokenbucket = []
 
         for num_cores in cores:
-            results_tb = run_performance_test(executable_name, "TestTokenBucketPerformance", num_cores, bucket_type, duration, refill_rate, capacity)
+            results_tb = run_performance_test(num_exec, executable_name, "TestTokenBucketPerformance", num_cores, bucket_type, duration, refill_rate, capacity)
             mean_tb = np.mean(results_tb)
             std_tb = np.std(results_tb)
             results_tokenbucket.append(mean_tb)
             errors_tokenbucket.append(std_tb)
             print(f"{label} Performance {num_cores} cores: {mean_tb:.3f} ns/request ± {std_tb:.3f}")
 
-        plt.figure(figsize=(10, 5))
-        plt.errorbar(cores, results_tokenbucket, yerr=errors_tokenbucket, label=label, marker='o', color='blue', capsize=5)
-        plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='StepWell w/ Trivial Tokenbucket', marker='x', color='green', capsize=5)
-        plt.xlabel('Number of Cores')
-        plt.ylabel('Execution Time per Request (ns/request)')
-        plt.ylim(0, None)
-        plt.title(f'Performance Analysis by Core Count - {label}')
-        plt.figtext(0.5, 0.007, f'Number of Requests: {duration}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=9, style='italic')
-        plt.xticks(cores)
-        plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-        if bucket_type == 3:  # Apply log scale only for "Tokenbucket with Locks"
-            plt.yscale('log')
-        plt.legend()
-        file_name = f"performance_comparison_{bucket_type}.png"
-        file_path = os.path.join(directory_path, file_name)
-        plt.savefig(file_path, format='png', dpi=300)
-        plt.close()
-        print(f"Performance comparison plot for {label} saved to {file_path}")
+        plt.errorbar(cores, results_tokenbucket, yerr=errors_tokenbucket, label=label, marker='o', capsize=5, color=colors[idx])
+
+    plt.xlabel('Number of Cores', fontsize=16)
+    plt.ylabel('Execution Time per Request (ns/request)', fontsize=16)
+    plt.title('Performance Analysis by Core Count')
+    plt.figtext(0.5, 0.007, f'Number of Requests: {duration}, Test Runs: {num_exec}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=12, style='italic')
+    plt.xticks(cores)
+    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+    plt.yscale('log')
+    plt.legend(fontsize=14)
+    plt.subplots_adjust(bottom=0.15)
+    file_name = "performance_analysis_combined.svg"
+    file_path = os.path.join(directory_path, file_name)
+    plt.savefig(file_path, format='svg', dpi=300)
+    plt.close()
+    print(f"Combined performance comparison plot saved to {file_path}")
 
 if __name__ == "__main__":
     main()
