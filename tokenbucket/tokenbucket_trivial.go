@@ -4,6 +4,7 @@
 package tokenbucket
 
 import (
+	"math"
 	"stepwell/extensions"
 	"time"
 )
@@ -24,17 +25,17 @@ func NewTokenBucketTrivial(capacity int64, refillRate float64, lastRefill time.T
 		tokens: capacity,
 		//how many new tokens per second are made available
 		refillRate: refillRate,
-		lastRefill: lastRefill.Unix(),
+		lastRefill: lastRefill.UnixNano(),
 	}
 }
 
 func (bucket *TokenBucketTrivial) refillTokens(now time.Time) {
-	nowUnix := now.Unix()
-	duration := nowUnix - bucket.lastRefill
-	tokensToAdd := int64(bucket.refillRate * float64(duration))
+	nowUnixNano := now.UnixNano()
+	duration := nowUnixNano - bucket.lastRefill
+	tokensToAdd := int64(math.Floor(float64(bucket.refillRate) / 1_000_000_000 * float64(duration)))
 
 	if tokensToAdd > 0 {
-		bucket.lastRefill = now.Unix()
+		bucket.lastRefill = now.UnixNano()
 		newTokens := bucket.tokens + tokensToAdd
 		if newTokens > bucket.capacity {
 			newTokens = bucket.capacity

@@ -1,6 +1,7 @@
 package tokenbucket
 
 import (
+	"math"
 	"sync/atomic"
 	"time"
 )
@@ -21,17 +22,17 @@ func NewTokenBucketAtomicLoops(capacity int64, refillRate float64, lastRefill ti
 		tokens: capacity,
 		//how many new tokens per second are made available
 		refillRate: refillRate,
-		lastRefill: lastRefill.Unix(),
+		lastRefill: lastRefill.UnixNano(),
 	}
 }
 
 func (bucket *TokenBucketAtomicLoops) refillTokens(now time.Time) {
-	lastRefillUnix := atomic.LoadInt64(&bucket.lastRefill)
-	duration := now.Unix() - lastRefillUnix
-	tokensToAdd := int64(bucket.refillRate * float64(duration))
+	lastRefillUnixNano := atomic.LoadInt64(&bucket.lastRefill)
+	duration := now.UnixNano() - lastRefillUnixNano
+	tokensToAdd := int64(math.Floor(float64(bucket.refillRate) / 1_000_000_000 * float64(duration)))
 
 	if tokensToAdd > 0 {
-		atomic.StoreInt64(&bucket.lastRefill, now.Unix())
+		atomic.StoreInt64(&bucket.lastRefill, now.UnixNano())
 		for {
 			currentTokens := atomic.LoadInt64(&bucket.tokens)
 			newTokens := currentTokens + tokensToAdd
