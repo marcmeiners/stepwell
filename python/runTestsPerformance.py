@@ -49,15 +49,15 @@ def main():
     
     compile_go_executable(go_source_path, executable_name)
     
-    cores = [1, 2, 4, 8, 32, 64]
+    cores = [1, 2, 4, 8, 32]
     duration = 2000000 #number of requests in this test
     num_exec = 30
-    refill_rate = 10
+    refill_rate = 100
     capacity = 10
-    bucket_types = [1,2,3,4]
+    bucket_types = [1, 5, 3, 4]
     bucket_labels = {
         1: "Tokenbucket Trivial",
-        2: "Tokenbucket Atomic with Loops",
+        5: "Tokenbucket Atomic",
         3: "Tokenbucket with Locks",
         4: "Tokenbucket Helia"
     }
@@ -97,7 +97,7 @@ def main():
 
     plt.xlabel('Number of Cores', fontsize=16)
     plt.ylabel('Execution Time per Request (ns/request)', fontsize=16)
-    plt.title('Performance Analysis by Core Count')
+    #plt.title('Performance Analysis by Core Count')
     plt.figtext(0.5, 0.007, f'Number of Requests: {duration}, Test Runs: {num_exec}, Refill Rate: {refill_rate}, Token Bucket Capacity: {capacity}', ha="center", fontsize=12, style='italic')
     plt.xticks(cores)
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)

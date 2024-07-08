@@ -55,15 +55,15 @@ def main():
     
     compile_go_executable(go_source_path, executable_name)
     
-    cores = [1, 2, 4, 8, 32, 64]
+    cores = [1, 2, 4, 8, 32]
     duration = 10 # number of seconds in this test
     num_exec = 3
-    refill_rate = 10
+    refill_rate = 100
     capacity = 10
-    bucket_types = [1, 2, 3, 4]
+    bucket_types = [1, 5, 3, 4]
     bucket_labels = {
         1: "Tokenbucket Trivial",
-        2: "Tokenbucket Atomic with Loops",
+        5: "Tokenbucket Atomic ",
         3: "Tokenbucket with Locks",
         4: "Tokenbucket Helia"
     }
