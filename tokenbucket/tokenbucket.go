@@ -8,6 +8,7 @@ type TokenBucketInterface interface {
 	IsAllowed(amount int64, now time.Time) bool
 	GetCapacity() int64
 	GetTokens() int64
+	SetRefillRate(refillRate float64)
 }
 
 func NewTokenBucketByType(bucketType int, capacity int64, refillRate float64, now time.Time) TokenBucketInterface {

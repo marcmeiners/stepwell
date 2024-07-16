@@ -47,6 +47,10 @@ func (bucket *TokenBucketLock) refillTokens(now time.Time) {
 	}
 }
 
+func (bucket *TokenBucketLock) SetRefillRate(refillRate float64) {
+	bucket.refillRate = refillRate
+}
+
 func (bucket *TokenBucketLock) GetCapacity() int64 {
 	return bucket.capacity
 }

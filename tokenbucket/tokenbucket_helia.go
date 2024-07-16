@@ -22,6 +22,10 @@ func NewTokenBucketHelia(capacity int64, refillRate float64, timestamp time.Time
 	}
 }
 
+func (bucket *TokenBucketHelia) SetRefillRate(refillRate float64) {
+	bucket.refillRateInverse = 1 / refillRate
+}
+
 func (bucket *TokenBucketHelia) GetCapacity() int64 {
 	return bucket.capacity
 }

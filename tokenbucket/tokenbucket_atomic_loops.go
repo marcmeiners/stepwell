@@ -46,6 +46,10 @@ func (bucket *TokenBucketAtomicLoops) refillTokens(now time.Time) {
 	}
 }
 
+func (bucket *TokenBucketAtomicLoops) SetRefillRate(refillRate float64) {
+	bucket.refillRate = refillRate
+}
+
 func (bucket *TokenBucketAtomicLoops) GetCapacity() int64 {
 	return bucket.capacity
 }
