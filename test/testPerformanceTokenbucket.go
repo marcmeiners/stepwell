@@ -39,9 +39,6 @@ func TestTokenBucketPerformance(numCores uint64, bucketType int, duration int, r
 	capacity := int64(capacityInt)
 	refillRate := float64(refillRateInt)
 	numIters := int64(duration)
-	// capacity := int64(10)
-	// refillRate := float64(1)
-	// numIters := int64(100000)
 
 	testRunning := false
 	var lock sync.Mutex

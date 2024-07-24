@@ -5,10 +5,6 @@ import (
 	"time"
 )
 
-//Problems to think about:
-
-//  1. What about the case when a tokenBucket on the path returns false when calling IsAllowed()?
-//     Should the tokens issued before be revoked again?
 type StepWellInterface interface {
 	//Get a token for all the buckets on the path to the single bucket which is the root of the tree and the bottom layer of the StepWell tree structure
 	IsAllowed(port uint64, amount int64, now time.Time) bool
