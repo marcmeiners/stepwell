@@ -55,7 +55,7 @@ def main():
     
     compile_go_executable(go_source_path, executable_name)
     
-    cores = [1, 2, 4, 8, 32]
+    cores = [1, 2, 4, 8, 16, 32]
     duration = 10 # number of seconds in this test
     num_exec = 3
     refill_rate = 100
