@@ -60,12 +60,12 @@ def main():
     num_exec = 3
     refill_rate = 100
     capacity = 10
-    bucket_types = [1, 5, 3, 4]
+    bucket_types = [1, 3, 5, 4]
     bucket_labels = {
-        1: "Tokenbucket Trivial",
-        5: "Tokenbucket Atomic ",
-        3: "Tokenbucket with Locks",
-        4: "Tokenbucket Helia"
+        1: "Trivial Tokenbucket",
+        3: "Locked Tokenbucket",
+        5: "Atomic Tokenbucket",
+        4: "Timestamp Tokenbucket"
     }
     plt.figure(figsize=(10, 5))
     colors = ['blue', 'red', 'purple', 'orange']
@@ -78,8 +78,6 @@ def main():
         results_stepwell.append(mean_sw)
         errors_stepwell.append(std_sw)
         print(f"StepWell Performance {num_cores} cores: {mean_sw:.3f} % ± {std_sw:.3f}")
-
-    plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='StepWell w/ Trivial Tokenbucket', marker='x', color='green', capsize=5)
     
     # Run TokenBucket tests for each bucket type and collect data for the plot
     for idx, bucket_type in enumerate(bucket_types):
@@ -92,6 +90,8 @@ def main():
             errors_tokenbucket.append(std_tb)
             print(f"{label} Performance {num_cores} cores: {mean_tb:.3f} % ± {std_tb:.3f}")
         plt.errorbar(cores, results_tokenbucket, yerr=errors_tokenbucket, label=label, marker='o', capsize=5, color=colors[idx])
+    
+    plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='Stepwell', marker='x', color='green', capsize=5)
     
     plt.xlabel('Number of Cores', fontsize=16)
     plt.ylabel('Percentage of Tokens Issued', fontsize=16)

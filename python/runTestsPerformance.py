@@ -56,10 +56,10 @@ def main():
     capacity = 10
     bucket_types = [1, 5, 3, 4]
     bucket_labels = {
-        1: "Tokenbucket Trivial",
-        5: "Tokenbucket Atomic",
-        3: "Tokenbucket with Locks",
-        4: "Tokenbucket Helia"
+        1: "Trivial Tokenbucket",
+        5: "Atomic Tokenbucket",
+        3: "Locked Tokenbucket",
+        4: "Timestamp Tokenbucket"
     }
     
     plt.figure(figsize=(10, 5))
@@ -77,8 +77,6 @@ def main():
         errors_stepwell.append(std_sw)
         print(f"StepWell Performance {num_cores} cores: {mean_sw:.3f} ns/request ± {std_sw:.3f}")
 
-    plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='StepWell w/ Trivial Tokenbucket', marker='x', color='green', capsize=5)
-
     # Run TokenBucket tests for each bucket type and plot
     for idx, bucket_type in enumerate(bucket_types):
         label = bucket_labels[bucket_type]
@@ -94,6 +92,8 @@ def main():
             print(f"{label} Performance {num_cores} cores: {mean_tb:.3f} ns/request ± {std_tb:.3f}")
 
         plt.errorbar(cores, results_tokenbucket, yerr=errors_tokenbucket, label=label, marker='o', capsize=5, color=colors[idx])
+
+    plt.errorbar(cores, results_stepwell, yerr=errors_stepwell, label='Stepwell', marker='x', color='green', capsize=5)
 
     plt.xlabel('Number of Cores', fontsize=16)
     plt.ylabel('Execution Time per Request (ns/request)', fontsize=16)
